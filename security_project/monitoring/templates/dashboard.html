@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Security Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f7f7f7; }
+        table { width: 100%; border-collapse: collapse; background: #fff; }
+        th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+        th { background: #333; color: #fff; }
+        tr:nth-child(even) { background: #f2f2f2; }
+        .alert { font-weight: bold; color: red; }
+        .clear-btn {
+            display: inline-block;
+            margin-bottom: 15px;
+            padding: 8px 15px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .clear-btn:hover {
+            background-color: #b02a37;
+        }
+    </style>
+</head>
+<body>
+    <h1>Security Incident Dashboard</h1>
+    <meta http-equiv="refresh" content="10"> <!-- refresh every 10 seconds -->
+
+    <form method="POST" action="{% url 'clear_logs' %}">
+        {% csrf_token %}
+        <button type="submit" class="clear-btn" onclick="return confirm('Are you sure you want to clear all logs?');">
+            Clear All Logs
+        </button>
+    </form>
+
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Attack Type</th>
+            <th>Event Data</th>
+            <th>IP Address</th>
+            <th>Action Taken</th>
+            <th>Time</th>
+        </tr>
+        {% for incident in incidents %}
+        <tr>
+            <td>{{ incident.id }}</td>
+            <td class="alert">{{ incident.attack_type }}</td>
+            <td>{{ incident.event_data }}</td>
+            <td>{{ incident.ip_address }}</td>
+            <td>{{ incident.action_taken }}</td>
+            <td>{{ incident.timestamp }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No incidents yet 🚀</td></tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

@@ -1,0 +1,151 @@
+login.html
+
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/login.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h2>Login </h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Login</button>
+    </form>
+</div>
+{% endblock %}
+
+
+profile.html
+
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+<h2>Welcome, {{ user.username }}</h2>
+<p>Email: {{ user.email }}</p>
+<p>Address: {{ user.address }}</p>
+<p>Phone: {{ user.phone }}</p>
+</div>
+{% endblock %}
+
+
+register.html
+
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/register.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h2>Register</h2>
+
+    {% if registered %}
+        <div class="register-success">
+            Registration complete! You can now
+            <a href="{% url 'accounts:login' %}">login here</a>.
+        </div>
+    {% else %}
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Register</button>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}
+
+
+vulnerablelogin.html
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Vulnerable Login{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/vuln_login.css' %}">
+{% endblock %}
+{% block content %}
+<div class="login-container">
+    <h2>Vulnerable Login Lab</h2>
+    <p>Try SQL injection to bypass login (e.g., <code>' OR '1'='1' --</code>)</p>
+
+    <form method="POST">
+        {% csrf_token %}
+        <label>Username:</label>
+        <input type="text" name="username" placeholder="Enter username" required>
+
+        <label>Password:</label>
+        <input type="text" name="password" placeholder="Enter password" required>
+
+        <button type="submit">Login</button>
+    </form>
+
+    <p><a href="{% url 'accounts:register' %}">Go to Vulnerable Registration</a></p>
+
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <p class="{{ message.tags }}">{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+
+vuln-register.html
+
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Vulnerable Registration{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/vuln_register.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <h2>Vulnerable Registration Lab</h2>
+    <p>Passwords are stored in plain text for this lab (DON'T use in real life!)</p>
+
+    <form method="POST">
+        {% csrf_token %}
+        <label>Username:</label>
+        <input type="text" name="username" placeholder="Enter username" required>
+
+        <label>Email:</label>
+        <input type="email" name="email" placeholder="Enter email" required>
+
+        <label>Password:</label>
+        <input type="text" name="password" placeholder="Enter password" required>
+
+        <button type="submit">Register</button>
+    </form>
+
+    <p><a href="{% url 'accounts:login' %}">Go to Vulnerable Login</a></p>
+
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <p class="{{ message.tags }}">{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

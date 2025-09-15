@@ -1,0 +1,308 @@
+#core/content_processors
+from django.conf import settings
+
+def simulation_mode(request):
+    """
+    Add the current simulation mode to template context.
+    Defaults to settings.SIMULATION_MODE if session key missing.
+    """
+    mode = request.session.get('sim_mode')
+    if not mode:
+        # Use project default from settings
+        mode = getattr(settings, "SIMULATION_MODE", "secure")
+        request.session['sim_mode'] = mode
+
+    return {"simulation_mode": mode}  # consistent with JS base.html
+
+
+
+#core/decorators
+from functools import wraps
+
+def mode_switch(secure_impl, vulnerable_impl):
+    @wraps(secure_impl)
+    def _wrapped(request, *args, **kwargs):
+        mode = request.session.get('sim_mode', 'secure')
+        if mode == 'vulnerable':
+            return vulnerable_impl(request, *args, **kwargs)
+        return secure_impl(request, *args, **kwargs)
+    return _wrapped
+
+
+#core/logger
+import os
+from datetime import datetime
+import random
+import requests
+from django.conf import settings
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Absolute paths for logs
+IDS_LOG_FILE = os.path.join(BASE_DIR, "logs/ids.log")
+AIRS_LOG_FILE = os.path.join(BASE_DIR, "logs/airs.log")
+
+# Ensure directory exists
+os.makedirs(os.path.dirname(IDS_LOG_FILE), exist_ok=True)
+os.makedirs(os.path.dirname(AIRS_LOG_FILE), exist_ok=True)
+
+# Create files if they don't exist
+open(IDS_LOG_FILE, 'a').close()
+open(AIRS_LOG_FILE, 'a').close()
+
+
+def write_ids_log(user_id, action):
+    """Write to IDS log"""
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(IDS_LOG_FILE, "a") as f:
+        f.write(f"{timestamp} | User: {user_id} | {action}\n")
+
+
+def write_airs_log(alert_type):
+    """Write to AIRS log"""
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    alert_id = random.randint(1000, 9999)
+    with open(AIRS_LOG_FILE, "a") as f:
+        f.write(f"{timestamp} | Alert ID: {alert_id} | Type: {alert_type}\n")
+
+
+def send_security_event(event_message, ip_address):
+    """
+    Send a security event to Project B logging endpoint.
+    Falls back to local IDS log if endpoint unavailable.
+    """
+    endpoint = getattr(settings, "PROJECT_B_LOG_ENDPOINT", None)
+    payload = {"event": event_message, "ip": ip_address}
+
+    if endpoint:
+        try:
+            response = requests.post(endpoint, json=payload, timeout=3)
+            if response.status_code == 200:
+                return {"status": "success", "response": response.text}
+            else:
+                write_ids_log("system", f"Failed to send to Project B: {event_message}")
+                return {"status": "error", "code": response.status_code}
+        except Exception as e:
+            write_ids_log("system", f"Error sending to Project B: {event_message} | {e}")
+            return {"status": "error", "exception": str(e)}
+    else:
+        # If endpoint not set, just log locally
+        write_ids_log("system", f"[LOCAL] {event_message}")
+        return {"status": "local_logged"}
+
+
+
+
+#core/middleware
+from django.utils.deprecation import MiddlewareMixin
+from .logger import send_security_event, write_ids_log
+import re
+
+class SimulationSecurityMiddleware(MiddlewareMixin):
+    SQLI_PATTERNS = [
+        r"('|\").*or.*=.*",  
+        r"union\s+select",   
+        r"drop\s+table",     
+        r"--"                
+    ]
+    XSS_PATTERNS = [
+        r"<script.*?>",      
+        r"onerror\s*=",      
+        r"alert\s*\("        
+    ]
+    BRUTEFORCE_PATTERNS = [
+        r"failed login",
+        r"invalid password"
+    ]
+
+    def process_request(self, request):
+        """
+        Capture POST requests and log them to both secure and vulnerable logs.
+        Forward suspicious activity to Project B.
+        """
+        if request.method == "POST":
+            user_ip = request.META.get("REMOTE_ADDR", "unknown")
+            try:
+                data = request.POST.dict()
+                # Mask password fields
+                masked_data = {k: ("*****" if "password" in k.lower() else v) for k, v in data.items()}
+                event_msg = f"POST to {request.path}: {masked_data}"
+
+                # Determine mode (session key or default to 'secure')
+                mode = request.session.get("sim_mode", "secure")
+
+                # Write IDS log for both modes
+                write_ids_log(user_id=user_ip, action=f"[{mode.upper()} MODE] {event_msg}")
+
+                # Detect attack type
+                attack_type = None
+                lowered = str(masked_data).lower()
+
+                if any(re.search(p, lowered) for p in self.SQLI_PATTERNS):
+                    attack_type = "sql_injection"
+                elif any(re.search(p, lowered) for p in self.XSS_PATTERNS):
+                    attack_type = "xss"
+                elif any(re.search(p, lowered) for p in self.BRUTEFORCE_PATTERNS):
+                    attack_type = "bruteforce"
+
+                # Send suspicious events to Project B only
+                if attack_type:
+                    send_security_event(f"{attack_type} detected in {mode} mode: {event_msg}", user_ip)
+
+            except Exception as e:
+                print(f"[Middleware] Failed to log/send event: {e}")
+        return None
+
+    def process_response(self, request, response):
+        """
+        Set response headers based on secure/vulnerable mode.
+        """
+        mode = request.session.get('sim_mode', 'secure')
+
+        if mode == 'secure':
+            response.headers.setdefault('X-Content-Type-Options', 'nosniff')
+            response.headers.setdefault('X-Frame-Options', 'DENY')
+            response.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
+            response.headers.setdefault('Permissions-Policy', 'geolocation=(), microphone=()')
+        else:
+            response.headers.pop('X-Frame-Options', None)
+
+        return response
+
+
+
+
+#core/urls
+from django.urls import path
+from . import views
+
+app_name = 'core'
+
+urlpatterns = [
+    path('search/', views.search_view, name='search'),
+    path('upload/', views.upload_view, name='upload'),
+    path('toggle_mode/', views.toggle_mode, name='toggle_mode'),  # mode toggle
+]
+
+
+
+#core/views
+from django.shortcuts import render, redirect
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+from django.conf import settings
+from django.contrib import messages
+import subprocess
+import re
+from django.core.files.storage import default_storage
+
+from security_client import send_security_event  # Project B integration
+
+# ------------------------------------------------------
+# Helper: Get client IP
+# ------------------------------------------------------
+def get_client_ip(request):
+    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    if x_forwarded_for:
+        return x_forwarded_for.split(",")[0]
+    return request.META.get("REMOTE_ADDR")
+
+
+# ======================================================
+# MODE TOGGLING (Secure / Vulnerable)
+# ======================================================
+def toggle_mode(request):
+    current = request.session.get('sim_mode', 'secure')
+    request.session['sim_mode'] = 'vulnerable' if current == 'secure' else 'secure'
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('product_list')))
+
+
+# ======================================================
+# COMMAND INJECTION DEMO (Search View)
+# ======================================================
+def search_view(request):
+    mode = request.session.get('mode', 'secure')
+    search_result = ''
+    user_ip = get_client_ip(request)
+
+    if request.method == 'POST':
+        query = request.POST.get('query', '')
+
+        if mode == 'vulnerable':
+            try:
+                result = subprocess.check_output(
+                    f"ping -c 1 {query}",
+                    shell=True, stderr=subprocess.STDOUT,
+                    universal_newlines=True
+                )
+                search_result = result
+            except subprocess.CalledProcessError as e:
+                search_result = e.output
+
+            # Log vulnerable attempt to Project B
+            send_security_event(f"Vulnerable Command Injection Search: query='{query}'", user_ip)
+
+        else:
+            if re.fullmatch(r'[a-zA-Z0-9\.\-]+', query):
+                try:
+                    result = subprocess.check_output(
+                        ['ping', '-c', '1', query],
+                        universal_newlines=True
+                    )
+                    search_result = result
+                except subprocess.CalledProcessError as e:
+                    search_result = e.output
+
+                # Log secure attempt to Project B
+                send_security_event(f"Secure Command Search: query='{query}'", user_ip)
+            else:
+                messages.error(request, "Invalid input provided.")
+
+    return render(request, 'search.html', {'search_result': search_result})
+
+
+# ======================================================
+# FILE UPLOAD DEMO (Path / Command Injection)
+# ======================================================
+def upload_view(request):
+    mode = request.session.get('mode', 'secure')
+    upload_result = ''
+    user_ip = get_client_ip(request)
+
+    if request.method == 'POST' and request.FILES.get('file'):
+        uploaded_file = request.FILES['file']
+        filename = request.POST.get('filename', uploaded_file.name)
+
+        if mode == 'vulnerable':
+            save_path = default_storage.save(filename, uploaded_file)
+            try:
+                result = subprocess.check_output(
+                    f"ls -al {save_path}",
+                    shell=True, stderr=subprocess.STDOUT,
+                    universal_newlines=True
+                )
+                upload_result = result
+            except subprocess.CalledProcessError as e:
+                upload_result = e.output
+
+            # Log vulnerable upload to Project B
+            send_security_event(f"Vulnerable File Upload: filename='{filename}'", user_ip)
+
+        else:
+            if re.fullmatch(r'[a-zA-Z0-9_.-]+', filename):
+                safe_path = default_storage.save(filename, uploaded_file)
+                try:
+                    result = subprocess.check_output(
+                        ['ls', '-al', safe_path],
+                        universal_newlines=True
+                    )
+                    upload_result = result
+                except subprocess.CalledProcessError as e:
+                    upload_result = e.output
+
+                # Log secure upload to Project B
+                send_security_event(f"Secure File Upload: filename='{filename}'", user_ip)
+            else:
+                messages.error(request, "Invalid filename provided.")
+
+    return render(request, 'upload.html', {'upload_result': upload_result})
