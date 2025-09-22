@@ -66,7 +66,7 @@ You can expose your local e-commerce site to the internet for demos or webhook t
     # 3) Expose your local server on port 8000
     ngrok http 8000
 
----
+
 
 4. Setup the Monitoring System
     ```bash
