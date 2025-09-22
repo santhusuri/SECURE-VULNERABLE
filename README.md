@@ -85,19 +85,19 @@ Monitoring API endpoint:
 
 Start the monitoring system (listening on port 8001).
 
-Run the e-commerce site.
+- Run the e-commerce site.
 
-Perform actions (normal or malicious) on the website.
+- Perform actions (normal or malicious) on the website.
 
-Monitoring system receives logs in real time and:
+- Monitoring system receives logs in real time and:
 
-Detects attacks
+- Detects attacks
 
-Blocks malicious IPs
+- Blocks malicious IPs
 
-Revokes active sessions if needed
+- Revokes active sessions if needed
 
-Stores logs for later analysis
+- Stores logs for later analysis
 
 ### Security tips — must read
 
