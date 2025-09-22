@@ -27,21 +27,17 @@
         <div class="vulnerable-alert">
             ⚠️ You are currently in <span style="text-transform: uppercase;">VULNERABLE</span> mode. Search inputs are not validated and may expose security risks.
         </div>
-        
-        {% if raw_output %}
-        <div style="margin: 20px auto; padding: 12px; background: #111; color: #0f0; font-family: monospace; border-radius: 6px; max-width: 90%; overflow-x: auto;">
-            <h4 style="margin-bottom: 8px; color: #ff4444;">💻 Command Output</h4>
-            <pre>{{ raw_output }}</pre>
-        </div>
     {% endif %}
         
-    {% endif %}
-
     {% if results %}
         <div class="product-grid">
             {% for product in results %}
                 <div class="product-card">
-                    <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                    {% if mode == 'vulnerable' %}
+                        <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                    {% else %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                    {% endif %}
                     <h4>{{ product.name }}</h4>
                     <p>${{ product.price }}</p>
                     <a href="{% url 'cart:add_to_cart' product.id %}">Add to Cart</a>
@@ -51,6 +47,14 @@
     {% else %}
         <p>No products found matching your search.</p>
     {% endif %}
+
+    {% if mode == 'vulnerable' and raw_output %}
+        <div style="margin: 20px auto; padding: 12px; background: #111; color: #0f0; font-family: monospace; border-radius: 6px; max-width: 90%; overflow-x: auto;">
+            <h4 style="margin-bottom: 8px; color: #ff4444;">💻 Command Output</h4>
+            <pre>{{ raw_output }}</pre>
+        </div>
+    {% endif %}
+
 {% else %}
     <div class="category-sidebar">
         <h3>Categories</h3>
@@ -64,7 +68,11 @@
     <div class="product-grid">
         {% for product in products %}
             <div class="product-card">
-                <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                {% if mode == 'vulnerable' %}
+                        <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                {% else %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                {% endif %}
                 <h4>{{ product.name }}</h4>
                 <p>${{ product.price }}</p>
                 <a href="{% url 'cart:add_to_cart' product.id %}">Add to Cart</a>

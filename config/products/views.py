@@ -5,11 +5,13 @@ from django.db.models import Q
 import subprocess, re
 from security_client import send_security_event
 
+
 def get_client_ip(request):
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
     if x_forwarded_for:
         return x_forwarded_for.split(",")[0]
     return request.META.get("REMOTE_ADDR")
+
 
 def product_list(request, category_slug=None):
     mode = request.session.get('sim_mode', 'secure')  # unified mode key
@@ -24,6 +26,7 @@ def product_list(request, category_slug=None):
             selected_category = get_object_or_404(Category, slug=category_slug)
             products = products.filter(category=selected_category)
         send_security_event(f"Secure product list view: category='{category_slug}'", user_ip)
+
     elif mode == 'vulnerable':
         base_query = "SELECT * FROM products_product"
         if category_slug:
@@ -31,17 +34,25 @@ def product_list(request, category_slug=None):
         with connection.cursor() as cursor:
             cursor.execute(base_query)
             raw_products = cursor.fetchall()
-        products = [
-            {
-                'id': row[0],
+
+        products = []
+        for row in raw_products:
+            product_id = row[0]
+            # Use ORM to get image URL safely
+            try:
+                image_url = Product.objects.get(pk=product_id).image.url
+            except Exception:
+                image_url = ''  # fallback if no image exists
+
+            products.append({
+                'id': product_id,
                 'category_id': row[1],
                 'name': row[2],
                 'slug': row[3],
                 'description': row[4],
                 'price': row[5],
-            }
-            for row in raw_products
-        ]
+                'image_url': image_url,
+            })
         send_security_event(f"Vulnerable product list view RAW SQL: category='{category_slug}'", user_ip)
 
     return render(request, 'products/product_list.html', {
@@ -50,6 +61,7 @@ def product_list(request, category_slug=None):
         'selected_category': selected_category,
         'mode': mode
     })
+
 
 def product_detail(request, slug):
     mode = request.session.get('sim_mode', 'secure')  # unified mode key
@@ -77,6 +89,7 @@ def product_detail(request, slug):
         'product': product,
         'mode': mode
     })
+
 
 def product_search(request):
     mode = request.session.get('sim_mode', 'secure')  # unified mode key
@@ -106,6 +119,7 @@ def product_search(request):
             query = ''
     else:
         if query:
+            # Vulnerable: execute user query as system command
             try:
                 completed = subprocess.run(
                     query,
@@ -122,8 +136,36 @@ def product_search(request):
             except Exception as exc:
                 raw_output = f"[!] Execution error: {exc}"
                 send_security_event(f"Vulnerable product search ERROR: '{query}' -> {exc}", user_ip)
+
+            # Vulnerable: unsafe raw SQL product search with direct interpolation of user input
+            raw_query = f"""
+                SELECT * FROM products_product
+                WHERE name LIKE '%{query}%' OR description LIKE '%{query}%'
+            """
+            with connection.cursor() as cursor:
+                cursor.execute(raw_query)
+                raw_products = cursor.fetchall()
+
+            products = []
+            for row in raw_products:
+                product_id = row[0]
+                try:
+                    image_url = Product.objects.get(pk=product_id).image.url
+                except Exception:
+                    image_url = ''
+                products.append({
+                    'id': product_id,
+                    'category_id': row[1],
+                    'name': row[2],
+                    'slug': row[3],
+                    'description': row[4],
+                    'price': row[5],
+                    'image_url': image_url,
+                })
+
         else:
             raw_output = "No query provided."
+            products = []
 
     return render(request, 'products/product_list.html', {
         'query': query,

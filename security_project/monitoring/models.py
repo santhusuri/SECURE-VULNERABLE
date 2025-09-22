@@ -9,16 +9,17 @@ class Incident(models.Model):
         ("bruteforce", "Brute Force"),
         ("other", "Other"),
     ]
+    SEVERITY_LEVELS = [("Low","Low"),("Medium","Medium"),("High","High")]
 
     attack_type = models.CharField(max_length=50, choices=ATTACK_TYPES, default="other")
     event_data = models.TextField()
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     action_taken = models.CharField(max_length=255, default="Logged")
+    severity = models.CharField(max_length=10, choices=SEVERITY_LEVELS, default="Low")
     timestamp = models.DateTimeField(auto_now_add=True)
-    suricata_raw = models.JSONField(null=True, blank=True)
 
     def __str__(self):
-        return f"{self.attack_type} from {self.ip_address} at {self.timestamp}"
+        return f"{self.attack_type} ({self.severity}) from {self.ip_address} at {self.timestamp}"
 
 
 class BlacklistEntry(models.Model):
