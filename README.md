@@ -34,7 +34,7 @@
     cd SECURE-VULNERABLE
 
 2. Setup the E-Commerce Website
-    cd ecommerce_site
+    cd config
     # Install dependencies
     pip install -r requirements.txt
 
@@ -45,8 +45,34 @@ Open in browser:
 
 Use the toggle switch to change between Secure and Vulnerable modes.
 
-3. Setup the Monitoring System
-    cd monitoring_system
+3. ngrok (Tunneling — optional)
+
+You can expose your local e-commerce site to the internet for demos or webhook testing using ngrok. **Only use this for short-lived development/testing** — do NOT expose the vulnerable mode to the public.
+
+Example:
+    ```bash
+    # start ngrok to tunnel port 8000
+    ngrok http 8000
+This prints a public URL (https://xxxx.ngrok.io
+) that forwards traffic to your local server.
+
+
+---
+
+### Quick commands (local dev)
+    
+    # 1) Install ngrok (follow official installation)
+    # 2) (optional) add your authtoken (one-time)
+    ngrok config add-authtoken <YOUR_AUTHTOKEN>
+
+    # 3) Expose your local server on port 8000
+    ngrok http 8000
+
+---
+
+4. Setup the Monitoring System
+    cd security_project
+    # Install dependencies
     pip install -r requirements.txt
 
     # Run monitoring server
@@ -73,3 +99,18 @@ Blocks malicious IPs
 Revokes active sessions if needed
 
 Stores logs for later analysis
+
+### Security tips — must read
+
+- DON'T expose vulnerable_mode to the public. Only demo it on an isolated network or to trusted users.
+
+- Use ngrok access controls (basic auth, IP restrictions, reserved domains) if you must share the tunnel. This reduces but does not eliminate risk.
+
+- Keep tunnels short-lived. Stop ngrok when done.
+
+- If testing with real users/data, use the secure mode only.
+
+- Monitor the tunnel (ngrok provides a web inspector, usually at http://127.0.0.1:4040
+) to see incoming requests.
+
+- Consider enabling a strong password (or other auth) on any exposed endpoints (or configure ngrok’s auth) to avoid unauthorized access.
