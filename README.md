@@ -99,7 +99,7 @@ Start the monitoring system (listening on port 8001).
 
 - Stores logs for later analysis
 
-### Security tips — must read
+## Security tips — must read
 
 - DON'T expose vulnerable_mode to the public. Only demo it on an isolated network or to trusted users.
 
