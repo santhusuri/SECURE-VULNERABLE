@@ -47,18 +47,15 @@ Open in browser:
 Use the toggle switch to change between Secure and Vulnerable modes.
 
 3. ngrok (Tunneling — optional)
-
-You can expose your local e-commerce site to the internet for demos or webhook testing using ngrok. **Only use this for short-lived development/testing** — do NOT expose the vulnerable mode to the public.
-
-Example:
-    ```bash
+   ```bash
     # start ngrok to tunnel port 8000
     ngrok http 8000
 This prints a public URL (https://xxxx.ngrok.io
 ) that forwards traffic to your local server.
 
 
----
+You can expose your local e-commerce site to the internet for demos or webhook testing using ngrok. **Only use this for short-lived development/testing** — do NOT expose the vulnerable mode to the public.
+
 
 ### Quick commands (local dev)
     
@@ -72,6 +69,7 @@ This prints a public URL (https://xxxx.ngrok.io
 ---
 
 4. Setup the Monitoring System
+    ```bash
     cd security_project
     # Install dependencies
     pip install -r requirements.txt
