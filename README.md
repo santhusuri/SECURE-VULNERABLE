@@ -36,6 +36,9 @@
 2. Setup the E-Commerce Website
     ```bash
     cd config
+    python3 -m venv venv
+    source venv/bin/activate   # On Windows: venv\Scripts\activate
+
     # Install dependencies
     pip install -r requirements.txt
 
@@ -71,6 +74,9 @@ You can expose your local e-commerce site to the internet for demos or webhook t
 4. Setup the Monitoring System
     ```bash
     cd security_project
+    python3 -m venv venv
+    source venv/bin/activate   # On Windows: venv\Scripts\activate
+
     # Install dependencies
     pip install -r requirements.txt
 
