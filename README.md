@@ -34,6 +34,7 @@
     cd SECURE-VULNERABLE
 
 2. Setup the E-Commerce Website
+    ```bash
     cd config
     # Install dependencies
     pip install -r requirements.txt
