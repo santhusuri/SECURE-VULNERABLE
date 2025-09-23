@@ -15,6 +15,8 @@ class Shipment(models.Model):
             ('shipped', 'Shipped'),
             ('in_transit', 'In Transit'),
             ('delivered', 'Delivered'),
+            ('delayed', 'Delayed'),
+            ('out_of_stock', 'Out of Stock'),
         ],
         default='pending'
     )

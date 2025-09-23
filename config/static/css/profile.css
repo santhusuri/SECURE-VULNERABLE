@@ -1,30 +1,221 @@
-/* Container for the profile details */
+/* static/css/profile.css
+   Styling for accounts/templates/profile.html
+*/
+
+/* Base container */
 .form-container {
-    max-width: 500px;
-    margin: 3rem auto;
-    padding: 2rem 2.5rem;
-    background-color: #f4f6f8;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: #222;
-    text-align: left;
+  max-width: 760px;
+  margin: 32px auto;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(10, 20, 40, 0.06);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color: #111827;
 }
 
+/* Heading & info */
 .form-container h2 {
-    margin-bottom: 1.2rem;
-    font-size: 2rem;
-    color: #007BFF;
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+  color: #0f172a;
 }
-
 .form-container p {
-    font-size: 1.1rem;
-    margin-bottom: 0.8rem;
-    color: #444;
-    line-height: 1.5;
+  margin: 6px 0;
+  color: #374151;
+  font-size: 0.95rem;
 }
 
-/* Optional: highlight the email, address, phone */
-.form-container p strong {
-    color: #0056b3;
+/* Avatar variant: rounded-square with customizable ring color */
+:root {
+  /* change this to any color you like (hex, rgb, or rgba) */
+  --avatar-ring-color: rgba(59, 130, 246, 0.06);      /* soft ring (normal) */
+  --avatar-ring-color-strong: rgba(59, 130, 246, 0.12);/* stronger on hover/focus */
+  --avatar-size: 150px;                                /* base avatar size */
 }
+
+/* Avatar (current photo + preview) */
+#currentPhoto,
+#photoPreview {
+  display: block;
+  width: var(--avatar-size);
+  height: var(--avatar-size);
+  object-fit: cover;
+  border-radius: 12px;                /* rounded-corners: change to 50% for circular */
+  border: 4px solid #ffffff;          /* white inner frame */
+  box-shadow:
+    0 6px 18px rgba(2, 6, 23, 0.12),  /* soft shadow */
+    0 0 0 6px var(--avatar-ring-color);/* subtle colored ring (uses CSS variable) */
+  margin: 8px 0 18px;
+  transition: transform .18s ease, box-shadow .18s ease;
+  background-color: #f8fafc;          /* fallback background */
+}
+
+/* Hover/Focus micro-interaction (stronger ring) */
+#currentPhoto:hover,
+#photoPreview:hover,
+#currentPhoto:focus,
+#photoPreview:focus {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow:
+    0 10px 30px rgba(2, 6, 23, 0.16),
+    0 0 0 8px var(--avatar-ring-color-strong);
+}
+
+/* Mode banners */
+.mode-banner {
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 700;
+  margin: 12px 0;
+  line-height: 1.2;
+}
+.mode-banner.vulnerable {
+  background: #fff4f4;
+  border: 1px solid #ffb3b3;
+  color: #7a1f1f;
+}
+.mode-banner.secure {
+  background: #f0fbf4;
+  border: 1px solid #bfe8c9;
+  color: #065f46;
+}
+
+/* Form layout */
+.form-container form {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-column-gap: 18px;
+  grid-row-gap: 12px;
+  align-items: start;
+}
+
+.form-container form label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+  color: #0f172a;
+}
+
+/* Inputs that span full width */
+.form-container form textarea,
+.form-container form input[type="text"],
+.form-container form input[type="file"] {
+  grid-column: 1 / -1;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e6e9ef;
+  border-radius: 8px;
+  background: #fafafa;
+  font-size: 0.95rem;
+  color: #0f172a;
+  box-sizing: border-box;
+}
+
+/* Make phone input use one column on large screens */
+.form-container form input[type="text"] {
+  grid-column: auto;
+}
+
+/* Buttons */
+.form-container form button {
+  grid-column: 1 / -1;
+  padding: 10px 14px;
+  font-size: 1rem;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(180deg,#2563eb,#1e40af);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(37,99,235,0.18);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.form-container form button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(37,99,235,0.18);
+}
+
+/* Messages list */
+.messages {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0 0;
+}
+.messages li {
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.messages li.success {
+  background: #ecfdf5;
+  border: 1px solid #bbf7d0;
+  color: #065f46;
+}
+.messages li.error {
+  background: #fff1f2;
+  border: 1px solid #fecaca;
+  color: #7f1d1d;
+}
+.messages li.warning {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+}
+.messages li.info {
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  color: #3730a3;
+}
+
+/* file info helper (preview & warnings) */
+.helper {
+  grid-column: 1 / -1;
+  font-size: 0.88rem;
+  color: #6b7280;
+  margin-top: 6px;
+}
+
+/* Smaller helper/warnings when shown inline */
+#fileInfo {
+  margin-top: 6px;
+}
+
+/* Accessibility focus */
+.form-container input:focus, .form-container textarea:focus, .form-container button:focus {
+  outline: 3px solid rgba(37, 99, 235, 0.12);
+  outline-offset: 2px;
+}
+
+/* Responsive: stack on small screens */
+@media (max-width: 640px) {
+  .form-container {
+    padding: 16px;
+    margin: 18px;
+  }
+  .form-container form {
+    grid-template-columns: 1fr;
+  }
+  :root { --avatar-size: 120px; }
+  #currentPhoto, #photoPreview {
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+  }
+}
+
+/* Very small screens */
+@media (max-width: 400px) {
+  .form-container {
+    margin: 12px;
+    padding: 12px;
+  }
+  :root { --avatar-size: 100px; }
+  #currentPhoto, #photoPreview {
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+  }
+}
+/* End of profile.css */

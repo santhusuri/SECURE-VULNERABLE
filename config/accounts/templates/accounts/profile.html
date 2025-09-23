@@ -2,15 +2,141 @@
 
 {% block title %}Profile{% endblock %}
 {% load static %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/profile.css' %}">
 {% endblock %}
 
 {% block content %}
 <div class="form-container">
-<h2>Welcome, {{ user.username }}</h2>
-<p>Email: {{ user.email }}</p>
-<p>Address: {{ user.address }}</p>
-<p>Phone: {{ user.phone }}</p>
+  <h2>Welcome, {{ user.username }}</h2>
+  <p>Email: {{ user.email }}</p>
+
+  <!-- current profile photo -->
+  {% if user.photo %}
+    <img id="currentPhoto" src="{{ user.photo.url }}" alt="Profile Photo">
+  {% else %}
+    <p>No profile photo uploaded.</p>
+  {% endif %}
+
+  <!-- Mode banner -->
+  {% if mode == "vulnerable" %}
+    <div class="mode-banner vulnerable">
+      <strong>⚠️ VULNERABLE MODE</strong> — Upload validation intentionally disabled for lab/demo only. <em>Do not use on a public server.</em>
+    </div>
+  {% else %}
+    <div class="mode-banner secure">
+      <strong>Secure mode</strong> — uploads are validated. Allowed extensions:
+      <code>{{ allowed_exts|join:", " }}</code>. Max size: 2 MB.
+    </div>
+  {% endif %}
+
+  <!-- Messages -->
+  {% if messages %}
+    <ul class="messages">
+      {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  <!-- Upload + profile form -->
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <!-- Image preview (client-side) -->
+    <img id="photoPreview" src="" alt="Preview" style="display:none; width:150px; height:150px; object-fit:cover; border-radius:8px; margin:8px 0;">
+
+    <div id="fileInfo" class="helper" style="display:none;"></div>
+
+    <label for="photo">Profile Photo:</label><br>
+    <input
+      type="file"
+      id="photoInput"
+      name="photo"
+      accept="image/*"
+      {% if mode == "secure" and allowed_exts %}
+        data-allowed-exts="{{ allowed_exts|join:',' }}"
+        data-max-bytes="2097152"
+      {% endif %}
+    ><br><br>
+
+    <label for="address">Address:</label><br>
+    <textarea name="address" rows="3" cols="40">{{ user.address }}</textarea><br><br>
+
+    <label for="phone">Phone:</label><br>
+    <input type="text" name="phone" value="{{ user.phone }}"><br><br>
+
+    <button type="submit">Update Profile</button>
+  </form>
 </div>
+
+<!-- Client-side preview + simple validation script -->
+<script>
+(() => {
+  const input = document.getElementById('photoInput');
+  const preview = document.getElementById('photoPreview');
+  const info = document.getElementById('fileInfo');
+  if (!input) return;
+
+  const allowedExtsAttr = input.dataset.allowedExts || "";
+  const allowedExts = allowedExtsAttr ? allowedExtsAttr.split(',').map(e => e.trim().toLowerCase()) : null;
+  const maxBytes = input.dataset.maxBytes ? parseInt(input.dataset.maxBytes, 10) : null;
+
+  input.addEventListener('change', (ev) => {
+    const file = ev.target.files && ev.target.files[0];
+    if (!file) {
+      preview.style.display = 'none';
+      info.style.display = 'none';
+      preview.src = '';
+      return;
+    }
+
+    const filename = file.name;
+    const sizeKB = Math.round(file.size / 1024);
+    const ext = filename.split('.').pop().toLowerCase();
+
+    if (allowedExts) {
+      // secure mode client-side checks
+      if (!allowedExts.includes(ext)) {
+        info.style.display = 'block';
+        info.textContent = `Extension '.${ext}' not allowed. Allowed: ${allowedExts.join(', ')}.`;
+        info.style.color = '#7f1d1d';
+        preview.style.display = 'none';
+        preview.src = '';
+        return;
+      }
+      if (maxBytes && file.size > maxBytes) {
+        info.style.display = 'block';
+        info.textContent = `File too large (${sizeKB} KB). Max ${(maxBytes/1024/1024).toFixed(1)} MB.`;
+        info.style.color = '#7f1d1d';
+        preview.style.display = 'none';
+        preview.src = '';
+        return;
+      }
+    } else {
+      // vulnerable mode: show warning
+      info.style.display = 'block';
+      info.textContent = '⚠️ VULNERABLE MODE: client-side validation is disabled. This upload is intentionally unsafe.';
+      info.style.color = '#92400e';
+    }
+
+    // show preview
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+
+    if (allowedExts) {
+      info.style.display = 'block';
+      info.textContent = `${filename} — ${sizeKB} KB`;
+      info.style.color = '#065f46';
+    } else {
+      info.textContent += `  •  ${filename} — ${sizeKB} KB`;
+    }
+  });
+})();
+</script>
 {% endblock %}

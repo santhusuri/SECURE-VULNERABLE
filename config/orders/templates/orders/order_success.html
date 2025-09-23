@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% block title %}Order Success{% endblock %}
-
 {% load static %}
 
 {% block extra_css %}
@@ -8,13 +7,53 @@
 {% endblock %}
 
 {% block content %}
-<h2>✅ Order Completed</h2>
-<p>Thank you for your purchase!</p>
-<a href="{% url 'products:product_list' %}">Continue Shopping</a>
+<div class="order-success-container">
+    <h2>✅ Order Completed</h2>
+    <p>Thank you for your purchase, {{ order.user.username|default:"Guest" }}!</p>
+    <p class="timestamp">Placed on: {{ order.created_at|date:"F j, Y, g:i a" }}</p>
 
-{% if order.id %}
-    <p>
-      <a href="{% url 'shipping:shipping_details' order.id %}">View Shipping Details</a>
-    </p>
-{% endif %}
+    <a class="btn" href="{% url 'products:product_list' %}">Continue Shopping</a>
+
+    {% if order.id %}
+        <p>
+          <a class="btn-secondary" href="{% url 'shipping:shipping_details' order.id %}">
+            View Shipping Details
+          </a>
+        </p>
+    {% endif %}
+
+    <div class="order-details">
+        <h3>Order #{{ order.id }}</h3>
+        <p><strong>Total:</strong> ${{ order.total }}</p>
+
+        <table class="order-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Image</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for item in order.items.all %}
+                <tr>
+                    <td>{{ item.product.name }}</td>
+                    <td>
+                        {% if item.product.image %}
+                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="product-image">
+                        {% else %}
+                            <span>No image</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.quantity }}</td>
+                    <td>${{ item.price }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="4">No products found for this order.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}

@@ -4,6 +4,8 @@ from django.db import models
 class User(AbstractUser):
     phone = models.CharField(max_length=15, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
+    photo = models.ImageField(upload_to='profile_photos/', blank=True, null=True)  # ✅ new field
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -13,6 +15,7 @@ class UserProfile(models.Model):
         self.mode = "vulnerable" if self.mode == "secure" else "secure"
         self.save()
         return self.mode
+
 
 class VulnUser(models.Model):
     username = models.CharField(max_length=100)

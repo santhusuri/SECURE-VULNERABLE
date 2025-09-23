@@ -91,9 +91,112 @@ def logout_view(request):
     logout(request)
     return redirect('home')
 
+import os
+import uuid
+import random
+from io import BytesIO
+from django.conf import settings
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.utils import timezone
+
+from PIL import Image, UnidentifiedImageError
+
+from .models import User
+from .views import get_client_ip  # adjust import if needed
+from security_client import send_security_event
+
+# Secure-mode config
+ALLOWED_IMAGE_EXTS = {"jpg", "jpeg", "png", "gif"}
+MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2 MB
+
+
 @login_required
 def profile_view(request):
-    return render(request, 'accounts/profile.html')
+    """
+    Profile page. Behavior depends on session['sim_mode']:
+    - secure: validate extension, size, and image integrity (Pillow). Pass allowed_exts to template.
+    - vulnerable: intentionally skip validation and save with original filename (lab/demo only).
+    """
+    mode = request.session.get("sim_mode", "secure")
+    user = request.user
+    user_ip = get_client_ip(request)
+
+    if request.method == "POST":
+        # update address & phone in both modes
+        if "address" in request.POST:
+            user.address = request.POST.get("address", "").strip()
+        if "phone" in request.POST:
+            user.phone = request.POST.get("phone", "").strip()
+
+        uploaded_file = request.FILES.get("photo")
+
+        if mode == "secure":
+            if uploaded_file:
+                # size check (safe to use before reading the stream)
+                if uploaded_file.size > MAX_UPLOAD_SIZE:
+                    messages.error(request, f"File too large. Max {MAX_UPLOAD_SIZE // (1024*1024)} MB.")
+                else:
+                    # extension from original filename (used for saved filename)
+                    ext = os.path.splitext(uploaded_file.name)[1].lstrip(".").lower() or "jpg"
+                    if ext not in ALLOWED_IMAGE_EXTS:
+                        messages.error(
+                            request,
+                            f"Extension '.{ext}' not allowed. Allowed: {', '.join(sorted(ALLOWED_IMAGE_EXTS))}."
+                        )
+                    else:
+                        # READ ONCE into memory
+                        content = uploaded_file.read()
+                        if not content:
+                            messages.error(request, "Uploaded file is empty.")
+                        else:
+                            # validate image bytes using Pillow via BytesIO
+                            try:
+                                Image.open(BytesIO(content)).verify()
+                            except (UnidentifiedImageError, Exception):
+                                messages.error(request, "Uploaded file is not a valid image.")
+                            else:
+                                safe_filename = f"{uuid.uuid4().hex}.{ext}"
+                                saved_path = default_storage.save(
+                                    os.path.join("profile_photos", safe_filename),
+                                    ContentFile(content)
+                                )
+                                user.photo = saved_path
+                                user.save()
+                                messages.success(request, "Profile photo uploaded securely.")
+            else:
+                # no file uploaded, just save other fields
+                user.save()
+
+            send_security_event(f"Secure Profile Update by user={user.username}", user_ip)
+
+        elif mode == "vulnerable":
+            # intentionally vulnerable: no validation, original filename preserved
+            if uploaded_file:
+                # Read bytes once and save with original name (vulnerable by design)
+                content = uploaded_file.read()
+                saved_path = default_storage.save(
+                    os.path.join("profile_photos", uploaded_file.name),
+                    ContentFile(content)
+                )
+                user.photo = saved_path
+                messages.warning(request, "Profile photo uploaded (VULNERABLE MODE).")
+            user.save()
+            send_security_event(f"Vulnerable Profile Update RAW FILE UPLOAD by user={user.username}", user_ip)
+
+        return redirect("accounts:profile")
+
+    # GET -> render template; in secure mode provide allowed_exts to show on page
+    context = {
+        "mode": mode,
+    }
+    if mode == "secure":
+        context["allowed_exts"] = sorted(ALLOWED_IMAGE_EXTS)
+
+    return render(request, "accounts/profile.html", context)
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
