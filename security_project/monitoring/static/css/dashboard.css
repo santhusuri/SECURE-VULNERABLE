@@ -23,7 +23,7 @@ button {
   border-radius: 6px;
   font-size: 1em;
   font-weight: 600;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
@@ -100,16 +100,16 @@ tbody td {
 }
 
 .severity.low {
-  background-color: #28a745;
+  background-color: #28a745; /* green */
 }
 
 .severity.medium {
-  background-color: #ffc107;
+  background-color: #ffc107; /* yellow */
   color: #333;
 }
 
 .severity.high {
-  background-color: #dc3545;
+  background-color: #dc3545; /* red */
 }
 
 /* Toast notifications */

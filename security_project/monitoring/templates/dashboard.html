@@ -9,7 +9,7 @@
 <h1>Security Incident Dashboard</h1>
 <button id="mute-btn" class="mute-btn">🔊 Sound On</button>
 <div id="toast-container"></div>
-<audio id="alert-sound" src="{% static 'sounds/alert.mp3' %}" preload="auto"></audio>
+<audio id="alert-sound" src="{% static 'sounds/alert.wav' %}" preload="auto"></audio>
 
 <form method="POST" action="{% url 'clear_logs' %}">
 {% csrf_token %}

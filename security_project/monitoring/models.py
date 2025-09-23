@@ -7,9 +7,15 @@ class Incident(models.Model):
         ("sql_injection", "SQL Injection"),
         ("xss", "Cross-Site Scripting"),
         ("bruteforce", "Brute Force"),
+        ("command_injection", "Command Injection"),  # 👈 add here
         ("other", "Other"),
     ]
-    SEVERITY_LEVELS = [("Low","Low"),("Medium","Medium"),("High","High")]
+
+    SEVERITY_LEVELS = [
+        ("Low", "Low"),
+        ("Medium", "Medium"),
+        ("High", "High"),
+    ]
 
     attack_type = models.CharField(max_length=50, choices=ATTACK_TYPES, default="other")
     event_data = models.TextField()
@@ -17,6 +23,18 @@ class Incident(models.Model):
     action_taken = models.CharField(max_length=255, default="Logged")
     severity = models.CharField(max_length=10, choices=SEVERITY_LEVELS, default="Low")
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        """Auto-assign severity based on attack_type."""
+        if self.attack_type in ["sql_injection", "suricata_alert", "snort_alert"]:
+            self.severity = "High"
+        elif self.attack_type in ["xss", "bruteforce"]:
+            self.severity = "Medium"
+        elif self.attack_type in ["command_injection"]:
+            self.severity = "Low"
+        else:
+            self.severity = "Low"
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.attack_type} ({self.severity}) from {self.ip_address} at {self.timestamp}"

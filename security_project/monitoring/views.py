@@ -1,6 +1,5 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_POST
 from django.contrib import messages
@@ -8,7 +7,7 @@ from django.http import JsonResponse
 from .serializers import EventSerializer, IncidentSerializer
 from .utils import add_blacklist_entry, block_ip_system, revoke_session_on_project_a
 from .models import Incident
-from django.db import connection
+
 
 @api_view(["POST"])
 def receive_log(request):
@@ -16,6 +15,7 @@ def receive_log(request):
     if not serializer.is_valid():
         return Response({"error": serializer.errors}, status=400)
 
+    # Model's save() will auto-assign severity
     incident = serializer.save()
 
     if incident.severity == "High" and incident.ip_address:
@@ -24,15 +24,15 @@ def receive_log(request):
         revoke_session_on_project_a(incident.ip_address)
 
     return Response({
-        "status": "alert" if incident.severity=="High" else "ok",
+        "status": "alert" if incident.severity == "High" else "ok",
         "attack": incident.attack_type,
         "severity": incident.severity,
         "action": incident.action_taken
-    }, status=201 if incident.severity=="High" else 200)
+    }, status=201 if incident.severity == "High" else 200)
 
 
 def dashboard(request):
-    incidents = Incident.objects.order_by("-timestamp")
+    incidents = Incident.objects.order_by("-timestamp")[:50]
     return render(request, "dashboard.html", {"incidents": incidents})
 
 
@@ -44,6 +44,14 @@ def clear_logs(request):
 
 
 def incidents_api(request):
-    incidents = Incident.objects.order_by("-timestamp")[:50]
-    serializer = IncidentSerializer(incidents, many=True)
+    """
+    Return only new incidents since the last_id provided by the frontend.
+    """
+    last_id = request.GET.get("last_id")
+    qs = Incident.objects.order_by("id")
+
+    if last_id and last_id.isdigit():
+        qs = qs.filter(id__gt=int(last_id))
+
+    serializer = IncidentSerializer(qs, many=True)
     return JsonResponse(serializer.data, safe=False)
