@@ -8,7 +8,9 @@
 {% block content %}
 <div class="login-container">
     <h2>Vulnerable Login Lab</h2>
-    <p>Try SQL injection to bypass login (e.g., <code>' OR '1'='1' --</code>)</p>
+    <p class="lab-note">LAB MODE — intentionally vulnerable. Do not deploy.</p>
+
+    <p>Try SQL injection to bypass login (example shown for demo only): <code>' OR '1'='1' --</code></p>
 
     <form method="POST">
         {% csrf_token %}
@@ -16,10 +18,20 @@
         <input type="text" name="username" placeholder="Enter username" required>
 
         <label>Password:</label>
+        <!-- text type to make password visible for demo purposes -->
         <input type="text" name="password" placeholder="Enter password" required>
 
         <button type="submit">Login</button>
     </form>
+
+    <!-- Unsafe echo to demonstrate reflected XSS (LAB ONLY) -->
+    {% if attempted_username %}
+        <div class="last-attempt">
+            <strong>Last attempt (reflected unsafely):</strong>
+            <!-- WARNING: intentionally unsafe for demo -->
+            {{ attempted_username|safe }}
+        </div>
+    {% endif %}
 
     <p><a href="{% url 'accounts:register' %}">Go to Vulnerable Registration</a></p>
 

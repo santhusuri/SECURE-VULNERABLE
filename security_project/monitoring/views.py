@@ -15,8 +15,19 @@ def receive_log(request):
     if not serializer.is_valid():
         return Response({"error": serializer.errors}, status=400)
 
-    # Model's save() will auto-assign severity
-    incident = serializer.save()
+    # Extract attack type
+    attack_type = serializer.validated_data.get("attack_type", "").lower()
+
+    # Decide severity (match your model values: sql_injection, xss, bruteforce, etc.)
+    if attack_type in ["sql_injection", "remote_code_execution", "authentication_bypass"]:
+        severity = "High"
+    elif attack_type in ["xss", "bruteforce", "csrf"]:
+        severity = "Medium"
+    else:
+        severity = "Low"
+
+    # Save incident with forced severity
+    incident = serializer.save(severity=severity)
 
     if incident.severity == "High" and incident.ip_address:
         add_blacklist_entry(incident.ip_address, reason=f"Detected {incident.attack_type}")

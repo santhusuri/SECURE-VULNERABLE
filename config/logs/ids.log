@@ -93,3 +93,26 @@
 2025-09-23 21:25:20 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/toggle_mode/: {}
 2025-09-23 21:25:29 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/login/: {'csrfmiddlewaretoken': 'wDRk2QYp9G7Qeo22w5Ja4TQXYAYVrw6xn3SsQAJSES3xTlLjEfRMdYX9FEWyXUqW', 'username': "' OR '1'='1' --", 'password': '*****'}
 2025-09-23 21:25:29 | User: system | [LOCAL] sql_injection detected in vulnerable mode: POST to /accounts/login/: {'csrfmiddlewaretoken': 'wDRk2QYp9G7Qeo22w5Ja4TQXYAYVrw6xn3SsQAJSES3xTlLjEfRMdYX9FEWyXUqW', 'username': "' OR '1'='1' --", 'password': '*****'}
+2025-09-23 22:23:57 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/toggle_mode/: {}
+2025-09-23 22:24:09 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/login/: {'csrfmiddlewaretoken': 'k5yjOSTHVzKjyisqQy01AnhICJ264qtr9UBizvmuuKPcLHrsyDESN6XxNhZMchQV', 'username': '<script>XSS_TEST</script>', 'password': '*****'}
+2025-09-23 22:24:09 | User: system | [LOCAL] xss detected in vulnerable mode: POST to /accounts/login/: {'csrfmiddlewaretoken': 'k5yjOSTHVzKjyisqQy01AnhICJ264qtr9UBizvmuuKPcLHrsyDESN6XxNhZMchQV', 'username': '<script>XSS_TEST</script>', 'password': '*****'}
+2025-09-23 22:24:26 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/login/: {'csrfmiddlewaretoken': '9yIuAY6OTY4OvEen6VRb5VZDmivE0nmIYnLtlBzBs99HI3dpO0v2iEFsxQsk8eJc', 'username': '<script>XSS_TEST</script>', 'password': '*****'}
+2025-09-23 22:24:26 | User: system | [LOCAL] xss detected in vulnerable mode: POST to /accounts/login/: {'csrfmiddlewaretoken': '9yIuAY6OTY4OvEen6VRb5VZDmivE0nmIYnLtlBzBs99HI3dpO0v2iEFsxQsk8eJc', 'username': '<script>XSS_TEST</script>', 'password': '*****'}
+2025-09-23 22:26:20 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/login/: {'csrfmiddlewaretoken': 'oRXkl6Is4dsSKIY6RPFS6cG2HB3J2SQrdG0j6JbfDoxLX7X8zUjJjVmRS90paJdV', 'username': '<script>XSS_TEST</script>', 'password': '*****'}
+2025-09-23 22:26:20 | User: system | [LOCAL] xss detected in vulnerable mode: POST to /accounts/login/: {'csrfmiddlewaretoken': 'oRXkl6Is4dsSKIY6RPFS6cG2HB3J2SQrdG0j6JbfDoxLX7X8zUjJjVmRS90paJdV', 'username': '<script>XSS_TEST</script>', 'password': '*****'}
+2025-09-23 22:32:02 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/login/: {'csrfmiddlewaretoken': 'oRXkl6Is4dsSKIY6RPFS6cG2HB3J2SQrdG0j6JbfDoxLX7X8zUjJjVmRS90paJdV', 'username': '<script>XSS_TEST</script>', 'password': '*****'}
+2025-09-23 22:32:02 | User: system | [LOCAL] xss detected in vulnerable mode: POST to /accounts/login/: {'csrfmiddlewaretoken': 'oRXkl6Is4dsSKIY6RPFS6cG2HB3J2SQrdG0j6JbfDoxLX7X8zUjJjVmRS90paJdV', 'username': '<script>XSS_TEST</script>', 'password': '*****'}
+2025-09-23 22:43:38 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/toggle_mode/: {}
+2025-09-23 22:46:02 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/toggle_mode/: {}
+2025-09-23 22:47:00 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/vuln_login/: {'csrfmiddlewaretoken': '8tczAssKvymek2Lajh1g7XHXvrRJs373Xifyl5Vx4Jr7xrKc1mF7kGnMGZOpAUux', 'username': '<script>XSS_TEST</script>', 'password': '*****'}
+2025-09-23 22:47:00 | User: system | [LOCAL] xss detected in vulnerable mode: POST to /accounts/vuln_login/: {'csrfmiddlewaretoken': '8tczAssKvymek2Lajh1g7XHXvrRJs373Xifyl5Vx4Jr7xrKc1mF7kGnMGZOpAUux', 'username': '<script>XSS_TEST</script>', 'password': '*****'}
+2025-09-23 22:48:07 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/vuln_login/: {'csrfmiddlewaretoken': '5SY1brEDu0kAXBbMLEb3DaGRIgmLeFcrUH10W47q3bpta0aOtJPUQTmGTOjrmwzV', 'username': '<script>XSS_TEST</script>', 'password': '*****'}
+2025-09-23 22:48:07 | User: system | [LOCAL] xss detected in vulnerable mode: POST to /accounts/vuln_login/: {'csrfmiddlewaretoken': '5SY1brEDu0kAXBbMLEb3DaGRIgmLeFcrUH10W47q3bpta0aOtJPUQTmGTOjrmwzV', 'username': '<script>XSS_TEST</script>', 'password': '*****'}
+2025-09-23 22:51:14 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/vuln_login/: {'csrfmiddlewaretoken': 'SXQ8NqjaHv5nme04Llz88is9LkQSPMnOHMT7y3MXgGagzDZ6tqdZl18YWSNyXDKi', 'username': "' OR '1'='1' --", 'password': '*****'}
+2025-09-23 22:51:14 | User: system | [LOCAL] sql_injection detected in vulnerable mode: POST to /accounts/vuln_login/: {'csrfmiddlewaretoken': 'SXQ8NqjaHv5nme04Llz88is9LkQSPMnOHMT7y3MXgGagzDZ6tqdZl18YWSNyXDKi', 'username': "' OR '1'='1' --", 'password': '*****'}
+2025-09-24 09:34:26 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/toggle_mode/: {}
+2025-09-24 09:34:47 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/login/: {'csrfmiddlewaretoken': 'RuUuQWXckKnNiTNQO4wUag9aGFaSuA1DbIgyaRbqZW2rXCZuKUQIiUEZ6FcG1JT7', 'username': "' OR '1'='1' --", 'password': '*****'}
+2025-09-24 09:34:47 | User: system | [LOCAL] sql_injection detected in vulnerable mode: POST to /accounts/login/: {'csrfmiddlewaretoken': 'RuUuQWXckKnNiTNQO4wUag9aGFaSuA1DbIgyaRbqZW2rXCZuKUQIiUEZ6FcG1JT7', 'username': "' OR '1'='1' --", 'password': '*****'}
+2025-09-24 09:35:59 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/toggle_mode/: {}
+2025-09-24 09:37:39 | User: 127.0.0.1 | [SECURE MODE] POST to /orders/create_order/: {}
+2025-09-24 09:39:01 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/toggle_mode/: {}
