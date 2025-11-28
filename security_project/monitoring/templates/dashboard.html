@@ -1,42 +1,69 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Security Dashboard</title>
-<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Security Dashboard</title>
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
 </head>
 <body>
-<h1>Security Incident Dashboard</h1>
-<button id="mute-btn" class="mute-btn">🔊 Sound On</button>
-<div id="toast-container"></div>
-<audio id="alert-sound" src="{% static 'sounds/alert.wav' %}" preload="auto"></audio>
+  <!-- Header -->
+  <header class="dashboard-header">
+    <h1>🔐 Security Incident Dashboard</h1>
+    <div class="header-actions">
+      <button id="mute-btn" class="mute-btn">🔊 Sound On</button>
+      <form method="POST" action="{% url 'clear_logs' %}" class="clear-logs-form">
+        {% csrf_token %}
+        <button type="submit" class="clear-btn" onclick="return confirm('Are you sure you want to clear all logs?');">
+          🗑️ Clear Logs
+        </button>
+      </form>
+    </div>
+  </header>
 
-<form method="POST" action="{% url 'clear_logs' %}">
-{% csrf_token %}
-<button type="submit" onclick="return confirm('Are you sure you want to clear all logs?');">Clear All Logs</button>
-</form>
+  <!-- Toasts -->
+  <div id="toast-container" class="toast-container"></div>
+  <audio id="alert-sound" src="{% static 'sounds/alert.wav' %}" preload="auto"></audio>
 
-<table border="1" cellpadding="10">
-<thead>
-<tr><th>ID</th><th>Attack Type</th><th>Event Data</th><th>IP Address</th><th>Action Taken</th><th>Time</th><th>Severity</th></tr>
-</thead>
-<tbody>
-{% for incident in incidents %}
-<tr data-id="{{ incident.id }}">
-<td>{{ incident.id }}</td>
-<td>{{ incident.attack_type }}</td>
-<td>{{ incident.event_data }}</td>
-<td>{{ incident.ip_address }}</td>
-<td>{{ incident.action_taken }}</td>
-<td>{{ incident.timestamp|date:"Y-m-d H:i:s" }}</td>
-<td><span class="severity {{ incident.severity|lower }}">{{ incident.severity }}</span></td>
-</tr>
-{% empty %}
-<tr><td colspan="7">No incidents yet 🚀</td></tr>
-{% endfor %}
-</tbody>
-</table>
+  <!-- Incident Table -->
+  <section class="table-section">
+    <table class="incident-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Attack Type</th>
+          <th>Event Data</th>
+          <th>IP Address</th>
+          <th>Action Taken</th>
+          <th>Timestamp</th>
+          <th>Severity</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for incident in incidents %}
+        <tr data-id="{{ incident.id }}">
+          <td>{{ incident.id }}</td>
+          <td>{{ incident.attack_type }}</td>
+          <td class="event-data">{{ incident.event_data }}</td>
+          <td>{{ incident.ip_address }}</td>
+          <td>{{ incident.action_taken }}</td>
+          <td>{{ incident.timestamp|date:"Y-m-d H:i:s" }}</td>
+          <td>
+            <span class="badge severity-{{ incident.severity|lower }}">
+              {{ incident.severity }}
+            </span>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="empty-state">✅ No incidents detected. System is secure.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
 
-<script src="{% static 'js/dashboard.js' %}"></script>
+  <script src="{% static 'js/dashboard.js' %}"></script>
 </body>
 </html>

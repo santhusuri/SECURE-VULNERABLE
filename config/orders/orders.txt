@@ -1,18 +1,125 @@
-#orders/models
+#orders/models.py
 from django.db import models
 from django.contrib.auth import get_user_model
+from pytz import timezone
+from django.utils import timezone
+from products.models import Product   # adjust import based on where your Product model is
 
 User = get_user_model()
+
 
 class Order(models.Model):
     user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
     total = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    # Add any other fields you need, e.g., status, shipping address, etc.
 
     def __str__(self):
         return f"Order #{self.id} by {self.user or 'Guest'} - Total: ${self.total}"
+
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, related_name="items", on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    added_at = models.DateTimeField(default=timezone.now)
+    
+    def __str__(self):
+        return f"{self.product.name} (x{self.quantity})"
+
+#orders/signals.py
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.utils import timezone
+from datetime import timedelta
+import random
+
+from django.db import models  # 👈 needed for F expressions
+from orders.models import Order
+from shipping.models import Shipment
+
+
+@receiver(post_save, sender=Order)
+def create_shipment_for_order(sender, instance, created, **kwargs):
+    if created:
+        # Estimated delivery = 3 or 5 days
+        delivery_days = random.choice([3, 5])
+        estimated_delivery = timezone.now().date() + timedelta(days=delivery_days)
+
+        # --- Decide shipment status ---
+        status = "pending"
+
+        # Case 1: Out of stock (quantity requested > available stock)
+        if instance.items.filter(product__stock__lt=models.F('quantity')).exists():
+            status = "out_of_stock"
+
+        # Case 2: Simulate technical issue (20% chance)
+        elif random.choice([True, False, False, False, False]):
+            status = "delayed"
+
+        # Otherwise: Pending
+        else:
+            status = "pending"
+
+        # --- Create shipment ---
+        Shipment.objects.create(
+            order=instance,
+            tracking_number=f"TRK-{instance.pk}-{int(timezone.now().timestamp())}",
+            carrier="Default Carrier",
+            estimated_delivery=estimated_delivery,
+            status=status
+        )
+
+
+#orders/utils.py
+from io import BytesIO
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+
+def generate_invoice(order):
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    # Header
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(200, 750, "Order Invoice")
+
+    # Order Info
+    p.setFont("Helvetica", 12)
+    p.drawString(50, 710, f"Order ID: {order.id}")
+    p.drawString(50, 690, f"Customer: {order.user.username if order.user else 'Guest'}")
+    p.drawString(50, 670, f"Date: {order.created_at.strftime('%B %d, %Y %I:%M %p')}")
+    p.drawString(50, 650, f"Total: ${order.total}")
+
+    # Table Header
+    y = 610
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y, "Product")
+    p.drawString(250, y, "Quantity")
+    p.drawString(350, y, "Price")
+    p.line(50, y-5, 550, y-5)
+
+    # Table Rows
+    p.setFont("Helvetica", 12)
+    y -= 30
+    for item in order.items.all():
+        p.drawString(50, y, item.product.name[:30])  # truncate long names
+        p.drawString(260, y, str(item.quantity))
+        p.drawString(360, y, f"${item.price}")
+        y -= 20
+
+    # Footer
+    p.setFont("Helvetica-Oblique", 10)
+    p.drawString(50, 100, "Thank you for shopping with us!")
+
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+
+    return HttpResponse(buffer, content_type='application/pdf')
 
 
 #orders/urls
@@ -24,193 +131,393 @@ app_name = 'orders'
 urlpatterns = [
     
     path('', views.checkout, name='checkout'),
+    path("my-orders/", views.my_orders, name="my_orders"),
     path('create_order/', views.create_order, name='create_order'),
     path('webhook/', views.stripe_webhook, name='stripe_webhook'),
+    path("invoice/<int:order_id>/", views.download_invoice, name="download_invoice"),
     path('success/<int:order_id>/', views.order_success, name='order_success'),
 ]
 
 
-#orders/views
+#orders/views.py
 from django.conf import settings
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.db.models import Prefetch
+
 import stripe
 import json
 from datetime import date, timedelta
 
-from orders.models import Order
+from orders.models import Order, OrderItem
 from shipping.models import Shipment
+from .utils import generate_invoice
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
-# ======================================================
-# CHECKOUT VIEW
-# ======================================================
+# -----------------------
+# My Orders
+# -----------------------
+@login_required
+def my_orders(request):
+    orders = (
+        Order.objects.filter(user=request.user)
+        .prefetch_related(
+            "items__product",
+            Prefetch("shipment", queryset=Shipment.objects.all())
+        )
+        .order_by("-created_at")
+    )
+    return render(request, "orders/my_orders.html", {"orders": orders})
+
+
+# -----------------------
+# Checkout (secure vs vulnerable)
+# -----------------------
 def checkout(request):
     """
     Handles checkout flow depending on mode.
     - Secure mode:
         Creates a Stripe PaymentIntent.
-        Order is created only AFTER successful payment (to avoid ghost orders).
+        Order is created only AFTER successful payment.
     - Vulnerable mode:
-        Accepts user input for amount and immediately creates an order.
-        Simulates insecure payment bypass.
+        Accepts user input amount and immediately creates an order.
     """
-    mode = request.session.get('mode', 'secure')
-    cart = request.session.get('cart', {})
-    total = sum(item['price'] * item['qty'] for item in cart.values())
+    mode = request.session.get("sim_mode", "secure")
+    cart = request.session.get("cart", {})
+    total = sum(item["price"] * item["qty"] for item in cart.values())
 
     if not cart:
         messages.error(request, "Your cart is empty.")
-        return redirect('cart:cart_view')
+        return redirect("cart:cart_view")
 
-    if mode == 'secure':
-        # -----------------------------
-        # SECURE CHECKOUT
-        # -----------------------------
+    if mode == "secure":
         intent = stripe.PaymentIntent.create(
-            amount=int(total * 100),  # Stripe requires cents
-            currency='usd',
-            metadata={'user_id': request.user.id if request.user.is_authenticated else 'guest'}
+            amount=int(total * 100),
+            currency="usd",
+            metadata={"user_id": request.user.id if request.user.is_authenticated else "guest"},
         )
-        return render(request, 'orders/checkout.html', {
-            'cart': cart,
-            'total': total,
-            'client_secret': intent.client_secret,
-            'STRIPE_PUBLIC_KEY': settings.STRIPE_PUBLIC_KEY,
-            # Order will be created later via webhook or create_order view
-        })
+        return render(
+            request,
+            "orders/checkout.html",
+            {
+                "cart": cart,
+                "total": total,
+                "client_secret": intent.client_secret,
+                "STRIPE_PUBLIC_KEY": settings.STRIPE_PUBLIC_KEY,
+            },
+        )
 
-    elif mode == 'vulnerable':
-        # -----------------------------
-        # VULNERABLE CHECKOUT
-        # -----------------------------
-        if request.method == 'POST':
-            entered_amount = float(request.POST.get('amount', total))
-            order, shipment = create_order_and_shipment(request.user, cart, entered_amount)
-            messages.warning(request, f"(Vulnerable) Payment accepted for ${entered_amount} without verification!")
-            request.session['cart'] = {}  # Clear cart
-            return redirect('orders:order_success', order.id)
+    else:  # vulnerable mode
+        if request.method == "POST":
+            entered_amount = float(request.POST.get("amount", total))
+            order = create_order_with_items(request.user, cart, entered_amount)
+            messages.warning(
+                request,
+                f"(Vulnerable) Payment accepted for ${entered_amount} without verification!",
+            )
+            request.session["cart"] = {}
+            return redirect("orders:order_success", order.id)
 
-        return render(request, 'orders/vuln_checkout.html', {
-            'cart': cart,
-            'total': total
-        })
+        return render(request, "orders/vuln_checkout.html", {"cart": cart, "total": total})
 
 
-# ======================================================
-# STRIPE WEBHOOK HANDLER
-# ======================================================
+# -----------------------
+# Stripe Webhook
+# -----------------------
 @csrf_exempt
 def stripe_webhook(request):
-    """
-    Stripe webhook endpoint for secure payment confirmation.
-    - Verifies event signature.
-    - On payment success, creates order + shipment.
-    """
     payload = request.body
-    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
+    sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")
     endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
-
     try:
         event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
     except (ValueError, stripe.error.SignatureVerificationError):
-        return render(request, 'orders/webhook_failed.html')
+        return render(request, "orders/webhook_failed.html")
 
-    if event['type'] == 'payment_intent.succeeded':
-        # -----------------------------
-        # Handle successful payment
-        # -----------------------------
-        user_id = event['data']['object']['metadata']['user_id']
-        # TODO: Rebuild cart + total from persistent storage (not session)
-        cart = {}
+    if event["type"] == "payment_intent.succeeded":
+        user_id = event["data"]["object"]["metadata"]["user_id"]
+        cart = {}  # TODO: load cart from session/db if needed
         total = 0
-
-        # Resolve user if not guest
         user = None
-        if user_id != 'guest':
+        if user_id != "guest":
             from django.contrib.auth import get_user_model
             User = get_user_model()
             try:
                 user = User.objects.get(id=user_id)
             except User.DoesNotExist:
                 user = None
+        create_order_with_items(user, cart, total)
 
-        create_order_and_shipment(user, cart, total)
-        # ⚠ DO NOT use request.session here — webhooks aren’t tied to a user session
-
-    return render(request, 'orders/webhook_success.html')
+    return render(request, "orders/webhook_success.html")
 
 
-# ======================================================
-# ORDER SUCCESS PAGE
-# ======================================================
+# -----------------------
+# Order Success
+# -----------------------
 def order_success(request, order_id):
-    """
-    Displays confirmation page after order is placed.
-    """
     order = Order.objects.get(id=order_id)
-    return render(request, 'orders/order_success.html', {'order': order})
+    return render(request, "orders/order_success.html", {"order": order})
 
 
-# ======================================================
-# ORDER + SHIPMENT CREATION HELPER
-# ======================================================
-def create_order_and_shipment(user, cart, total):
-    """
-    Creates an Order and associated Shipment.
-    Used by both checkout flows and webhook.
-    """
-    order = Order.objects.create(
-        user=user if user and hasattr(user, 'is_authenticated') and user.is_authenticated else None,
-        total=total,
-        # Add more order fields if needed
-    )
-
-    shipment = Shipment.objects.create(
-        order=order,
-        tracking_number=f"TRACK{order.id}XYZ",
-        carrier="Django Express",
-        estimated_delivery=date.today() + timedelta(days=5),
-        shipped_date=None,
-        status="pending"
-    )
-    return order, shipment
-
-
-# ======================================================
-# API ENDPOINT: CREATE ORDER (AJAX)
-# ======================================================
+# -----------------------
+# Create Order (AJAX)
+# -----------------------
 @csrf_protect
 @require_POST
 def create_order(request):
-    """
-    API endpoint for securely creating an order after confirming payment.
-    - Expects `payment_intent_id` in request body.
-    - Should verify PaymentIntent with Stripe before creating order.
-    """
     try:
         data = json.loads(request.body)
         payment_intent_id = data.get("payment_intent_id")
-
-        # Retrieve cart + user from session
-        cart = request.session.get('cart', {})
-        total = sum(item['price'] * item['qty'] for item in cart.values())
+        cart = request.session.get("cart", {})
+        total = sum(item["price"] * item["qty"] for item in cart.values())
         user = request.user if request.user.is_authenticated else None
 
-        # TODO: Verify payment_intent_id with Stripe here
-
-        # Create Order + Shipment
-        order, shipment = create_order_and_shipment(user, cart, total)
-
-        # Clear cart session
-        request.session['cart'] = {}
-
+        # TODO: Verify payment_intent_id with Stripe before creating order
+        order = create_order_with_items(user, cart, total)
+        request.session["cart"] = {}
         return JsonResponse({"order_id": order.id})
-
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
+
+
+# -----------------------
+# Helper: Create Order + Items (shipment auto-created by signal)
+# -----------------------
+def create_order_with_items(user, cart, total):
+    order = Order.objects.create(
+        user=user if user and hasattr(user, "is_authenticated") and user.is_authenticated else None,
+        total=total,
+    )
+
+    for product_id, item in cart.items():
+        OrderItem.objects.create(
+            order=order,
+            product_id=product_id,
+            quantity=item["qty"],
+            price=item["price"],
+        )
+
+    # 🚫 Do NOT create Shipment here!
+    # Shipment is automatically created by the post_save signal on Order.
+    return order
+
+
+# -----------------------
+# Download Invoice
+# -----------------------
+@login_required
+def download_invoice(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    response = generate_invoice(order)
+    filename = f"invoice_order_{order.id}.pdf"
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
+
+
+
+#orders/templates
+
+#my_orders.html
+{% extends "base.html" %}
+{% load static %}
+{% block title %}My Orders{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/my_orders.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="my-orders-container">
+  <h2>📦 My Orders</h2>
+
+  {% if orders %}
+    {% for order in orders %}
+      <div class="order-card">
+        <div class="order-header">
+          <h3>Order #{{ order.id }}</h3>
+
+          {% if order.shipment.first %}
+            <span class="status {{ order.shipment.first.status|lower }}">
+              {{ order.shipment.first.status }}
+            </span>
+          {% else %}
+            <span class="status other">No Shipment</span>
+          {% endif %}
+        </div>
+
+        <p><strong>Placed on:</strong> {{ order.created_at|date:"F j, Y, g:i a" }}</p>
+        <p><strong>Total:</strong> ${{ order.total }}</p>
+
+        <p class="order-actions">
+          <a href="{% url 'orders:download_invoice' order.id %}" class="btn">Download Invoice</a>
+          <a href="{% url 'shipping:shipping_details' order.id %}" class="btn-secondary">View Shipping Details</a>
+        </p>
+
+        <table class="order-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Image</th>
+              <th>Quantity</th>
+              <th>Price</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for item in order.items.all %}
+            <tr>
+              <td>{{ item.product.name }}</td>
+              <td>
+                {% if item.product.image %}
+                  <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="product-image">
+                {% else %}
+                  <span>No image</span>
+                {% endif %}
+              </td>
+              <td>{{ item.quantity }}</td>
+              <td>${{ item.price }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>You haven’t placed any orders yet.</p>
+  {% endif %}
+</div>
+{% endblock %}
+
+
+
+#order_success.html
+{% extends "base.html" %}
+{% block title %}Order Success{% endblock %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/order_success.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="order-success-container">
+    <h2>✅ Order Completed</h2>
+    <p>Thank you for your purchase, {{ order.user.username|default:"Guest" }}!</p>
+    <p class="timestamp">Placed on: {{ order.created_at|date:"F j, Y, g:i a" }}</p>
+
+    <a class="btn" href="{% url 'products:product_list' %}">Continue Shopping</a>
+
+    {% if order.id %}
+        <p>
+          <a class="btn-secondary" href="{% url 'shipping:shipping_details' order.id %}">
+            View Shipping Details
+          </a>
+        </p>
+    {% endif %}
+
+    <div class="order-details">
+        <h3>Order #{{ order.id }}</h3>
+        <p><strong>Total:</strong> ${{ order.total }}</p>
+
+        <table class="order-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Image</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for item in order.items.all %}
+                <tr>
+                    <td>{{ item.product.name }}</td>
+                    <td>
+                        {% if item.product.image %}
+                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="product-image">
+                        {% else %}
+                            <span>No image</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.quantity }}</td>
+                    <td>${{ item.price }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="4">No products found for this order.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+
+
+#vuln_checkout.html
+{% extends "base.html" %}
+{% block title %}Vulnerable Checkout{% endblock %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/vuln_checkout.css' %}">
+{% endblock %}
+
+{% block content %}
+<h2>⚠ Vulnerable Checkout (Simulation)</h2>
+<p>This page intentionally skips validation. An attacker could change the total amount.</p>
+
+<table>
+{% for id, item in cart.items %}
+<tr>
+    <td>{{ item.name }}</td>
+    <td>{{ item.qty }}</td>
+    <td>${{ item.price }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<form method="POST">
+    {% csrf_token %}
+    <label>Enter Amount to Pay: </label>
+    <input type="text" name="amount" value="{{ total }}">
+    <button type="submit">Pay Now</button>
+</form>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

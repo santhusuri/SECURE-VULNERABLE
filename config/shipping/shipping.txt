@@ -1,5 +1,4 @@
 #shipping/models
-
 from django.db import models
 
 class Shipment(models.Model):
@@ -15,6 +14,8 @@ class Shipment(models.Model):
             ('shipped', 'Shipped'),
             ('in_transit', 'In Transit'),
             ('delivered', 'Delivered'),
+            ('delayed', 'Delayed'),
+            ('out_of_stock', 'Out of Stock'),
         ],
         default='pending'
     )
@@ -22,44 +23,7 @@ class Shipment(models.Model):
     def __str__(self):
         return f"Shipment for Order #{self.order.id} - {self.status}"
 
-
-#shipping/views
-"""
-shipping/views.py
-Handles shipment tracking and shipping details.
-"""
-
-from django.shortcuts import render, get_object_or_404
-from shipping.models import Shipment
-
-
-# ============================================================
-# 🔹 SHIPPING DETAILS VIEW
-# ============================================================
-def shipping_details(request, order_id):
-    """
-    Display shipping details for a given order.
-    
-    Args:
-        request: HTTP request object
-        order_id (int): ID of the order whose shipment details are needed
-    
-    Returns:
-        Renders `shipping/shipment_detail.html` with shipment information.
-    
-    Raises:
-        404: If no shipment exists for the given order_id
-    """
-    # ✅ Secure: uses Django ORM `get_object_or_404` to safely fetch shipment
-    shipment = get_object_or_404(Shipment, order_id=order_id)
-
-    return render(request, 'shipping/shipment_detail.html', {
-        'shipment': shipment
-    })
-
-
 #shipping/urls
-
 from django.urls import path
 from . import views
 
@@ -68,3 +32,44 @@ app_name = 'shipping'
 urlpatterns = [
     path('details/<int:order_id>/', views.shipping_details, name='shipping_details'),
 ]
+
+#shipping/views.py
+from django.shortcuts import render, get_object_or_404
+from shipping.models import Shipment
+
+def shipping_details(request, order_id):
+    mode = request.session.get('sim_mode', 'secure')  # unified mode key
+    shipment = get_object_or_404(Shipment, order_id=order_id)
+    context = {
+        'shipment': shipment,
+        'mode': mode  # pass mode to template for conditional display if needed
+    }
+    template_name = 'shipping/shipment_detail.html'
+    # Optionally use a different template in vulnerable mode, e.g.:
+    # if mode == 'vulnerable':
+    #     template_name = 'shipping/vuln_shipment_detail.html'
+    return render(request, template_name, context)
+    
+    
+#shipping/templates
+#shipment_detail.html
+
+{% extends 'base.html' %}
+{% block title %}Shipment Details{% endblock %}
+
+{%load static%}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/shipment_details.css' %}">
+{% endblock %}
+
+{% block content %}
+<h2>Shipment Details</h2>
+<p><strong>Order ID:</strong> {{ shipment.order.id }}</p>
+<p><strong>Tracking Number:</strong> {{ shipment.tracking_number }}</p>
+<p><strong>Carrier:</strong> {{ shipment.carrier }}</p>
+<p><strong>Estimated Delivery:</strong> {{ shipment.estimated_delivery }}</p>
+<p><strong>Shipped Date:</strong> {{ shipment.shipped_date|default:"Not yet shipped" }}</p>
+<p><strong>Status:</strong> {{ shipment.status }}</p>
+{% endblock %}
+

@@ -1,4 +1,3 @@
-#cart/urls
 from django.urls import path
 from . import views
 
@@ -9,5 +8,6 @@ urlpatterns = [
     path('add/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
     path('remove/<int:product_id>/', views.remove_from_cart, name='remove_from_cart'),
     path('clear/', views.clear_cart, name='clear_cart'),
-    path('update-quantity/<int:id>/', views.update_quantity, name='update_quantity'),
+    path('update-quantity/<int:id>/', views.update_quantity, name='update_quantity'),            # secure
+    path('vuln-update-quantity/<int:id>/', views.vuln_update_quantity, name='vuln_update_quantity'),  # vulnerable
 ]

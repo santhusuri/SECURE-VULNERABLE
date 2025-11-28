@@ -1,18 +1,13 @@
-#core/content_processors
+# core/context_processors.py
 from django.conf import settings
 
 def simulation_mode(request):
     """
-    Add the current simulation mode to template context.
-    Defaults to settings.SIMULATION_MODE if session key missing.
+    Inject 'simulation_mode' into all templates.
+    - Primary source: request.session['sim_mode']
+    - Fallback: settings.SIMULATION_MODE (default in settings.py)
     """
-    mode = request.session.get('sim_mode')
-    if not mode:
-        # Use project default from settings
-        mode = getattr(settings, "SIMULATION_MODE", "secure")
-        request.session['sim_mode'] = mode
-
-    return {"simulation_mode": mode}  # consistent with JS base.html
-
-
-
+    session_mode = request.session.get(
+        "sim_mode", getattr(settings, "SIMULATION_MODE", "secure")
+    )
+    return {"simulation_mode": session_mode}

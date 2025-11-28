@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Track Shipment{% endblock %}
+
+{% block content %}
+<h2>Shipment Tracking</h2>
+
+<p><strong>Order ID:</strong> {{ shipment.order.id }}</p>
+<p><strong>Tracking Number:</strong> {{ tracking_display }}</p>
+<p><strong>Status:</strong> {{ shipment.status }}</p>
+<p><strong>Estimated Delivery:</strong> {{ shipment.estimated_delivery }}</p>
+{% endblock %}

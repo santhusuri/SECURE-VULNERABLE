@@ -14,18 +14,32 @@ def simulation_mode(request):
 
     return {"simulation_mode": mode}  # consistent with JS base.html
 
-
-
-#core/decorators
+#core/decorators.py
 from functools import wraps
+from django.http import HttpResponseBadRequest
 
 def mode_switch(secure_impl, vulnerable_impl):
+    """
+    Decorator to switch between secure and vulnerable implementations of a view
+    based on the 'sim_mode' value stored in the user's session.
+
+    Args:
+        secure_impl (callable): The view function for secure mode.
+        vulnerable_impl (callable): The view function for vulnerable mode.
+
+    Returns:
+        callable: A wrapped view dispatching to the appropriate implementation.
+    """
     @wraps(secure_impl)
     def _wrapped(request, *args, **kwargs):
         mode = request.session.get('sim_mode', 'secure')
         if mode == 'vulnerable':
             return vulnerable_impl(request, *args, **kwargs)
-        return secure_impl(request, *args, **kwargs)
+        elif mode == 'secure':
+            return secure_impl(request, *args, **kwargs)
+        else:
+            # Optional: handle unexpected mode values gracefully
+            return HttpResponseBadRequest("Invalid simulation mode.")
     return _wrapped
 
 
@@ -89,8 +103,6 @@ def send_security_event(event_message, ip_address):
         # If endpoint not set, just log locally
         write_ids_log("system", f"[LOCAL] {event_message}")
         return {"status": "local_logged"}
-
-
 
 
 #core/middleware
@@ -170,8 +182,6 @@ class SimulationSecurityMiddleware(MiddlewareMixin):
         return response
 
 
-
-
 #core/urls
 from django.urls import path
 from . import views
@@ -185,8 +195,7 @@ urlpatterns = [
 ]
 
 
-
-#core/views
+#core/views.py
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -195,39 +204,25 @@ from django.contrib import messages
 import subprocess
 import re
 from django.core.files.storage import default_storage
-
 from security_client import send_security_event  # Project B integration
 
-# ------------------------------------------------------
-# Helper: Get client IP
-# ------------------------------------------------------
 def get_client_ip(request):
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
     if x_forwarded_for:
         return x_forwarded_for.split(",")[0]
     return request.META.get("REMOTE_ADDR")
 
-
-# ======================================================
-# MODE TOGGLING (Secure / Vulnerable)
-# ======================================================
 def toggle_mode(request):
     current = request.session.get('sim_mode', 'secure')
     request.session['sim_mode'] = 'vulnerable' if current == 'secure' else 'secure'
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('product_list')))
 
-
-# ======================================================
-# COMMAND INJECTION DEMO (Search View)
-# ======================================================
 def search_view(request):
-    mode = request.session.get('mode', 'secure')
+    mode = request.session.get('sim_mode', 'secure')  # unified mode key
     search_result = ''
     user_ip = get_client_ip(request)
-
     if request.method == 'POST':
         query = request.POST.get('query', '')
-
         if mode == 'vulnerable':
             try:
                 result = subprocess.check_output(
@@ -238,10 +233,7 @@ def search_view(request):
                 search_result = result
             except subprocess.CalledProcessError as e:
                 search_result = e.output
-
-            # Log vulnerable attempt to Project B
             send_security_event(f"Vulnerable Command Injection Search: query='{query}'", user_ip)
-
         else:
             if re.fullmatch(r'[a-zA-Z0-9\.\-]+', query):
                 try:
@@ -252,27 +244,18 @@ def search_view(request):
                     search_result = result
                 except subprocess.CalledProcessError as e:
                     search_result = e.output
-
-                # Log secure attempt to Project B
                 send_security_event(f"Secure Command Search: query='{query}'", user_ip)
             else:
                 messages.error(request, "Invalid input provided.")
-
     return render(request, 'search.html', {'search_result': search_result})
 
-
-# ======================================================
-# FILE UPLOAD DEMO (Path / Command Injection)
-# ======================================================
 def upload_view(request):
-    mode = request.session.get('mode', 'secure')
+    mode = request.session.get('sim_mode', 'secure')  # unified mode key
     upload_result = ''
     user_ip = get_client_ip(request)
-
     if request.method == 'POST' and request.FILES.get('file'):
         uploaded_file = request.FILES['file']
         filename = request.POST.get('filename', uploaded_file.name)
-
         if mode == 'vulnerable':
             save_path = default_storage.save(filename, uploaded_file)
             try:
@@ -284,10 +267,7 @@ def upload_view(request):
                 upload_result = result
             except subprocess.CalledProcessError as e:
                 upload_result = e.output
-
-            # Log vulnerable upload to Project B
             send_security_event(f"Vulnerable File Upload: filename='{filename}'", user_ip)
-
         else:
             if re.fullmatch(r'[a-zA-Z0-9_.-]+', filename):
                 safe_path = default_storage.save(filename, uploaded_file)
@@ -299,10 +279,7 @@ def upload_view(request):
                     upload_result = result
                 except subprocess.CalledProcessError as e:
                     upload_result = e.output
-
-                # Log secure upload to Project B
                 send_security_event(f"Secure File Upload: filename='{filename}'", user_ip)
             else:
                 messages.error(request, "Invalid filename provided.")
-
     return render(request, 'upload.html', {'upload_result': upload_result})

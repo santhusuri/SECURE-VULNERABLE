@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}All Shipments (Vulnerable){% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/shipment.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="vulnerable-alert">
+  ⚠ You are in <strong>VULNERABLE MODE</strong>. All shipments are exposed to any user!
+</div>
+
+<h2>All Shipments</h2>
+
+<table class="shipments-table">
+  <thead>
+    <tr>
+      <th>Order</th>
+      <th>User</th>
+      <th>Tracking</th>
+      <th>Carrier</th>
+      <th>Status</th>
+      <th>Estimated Delivery</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for shipment in shipments %}
+    <tr>
+      <td>#{{ shipment.order.id }}</td>
+      <td>{{ shipment.order.user.username|default:"Guest" }}</td>
+      <td>{{ shipment.tracking_number }}</td> <!-- Full tracking leaked -->
+      <td>{{ shipment.carrier }}</td>
+      <td>{{ shipment.status }}</td>
+      <td>{{ shipment.estimated_delivery }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

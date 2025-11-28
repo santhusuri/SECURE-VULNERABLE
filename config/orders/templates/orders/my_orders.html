@@ -1,68 +1,111 @@
 {% extends "base.html" %}
 {% load static %}
+
 {% block title %}My Orders{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/my_orders.css' %}">
+<style>
+    .orders-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 1rem;
+    }
+    .order-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1.2rem;
+        margin-bottom: 1.5rem;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .mode-badge {
+        font-size: 0.85rem;
+        font-weight: bold;
+        padding: 0.3rem 0.7rem;
+        border-radius: 6px;
+    }
+    .mode-secure {
+        background: #e6f9e6;
+        color: #2e7d32;
+        border: 1px solid #2e7d32;
+    }
+    .mode-vulnerable {
+        background: #ffe6e6;
+        color: #b22222;
+        border: 1px solid #b22222;
+    }
+    .order-items {
+        margin-top: 1rem;
+        border-top: 1px solid #eee;
+        padding-top: 1rem;
+    }
+    .order-items table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .order-items th, .order-items td {
+        padding: 0.6rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="my-orders-container">
-  <h2>📦 My Orders</h2>
+<div class="orders-container">
+    <h2>📦 My Orders</h2>
 
-  {% if orders %}
-    {% for order in orders %}
-      <div class="order-card">
-        <div class="order-header">
-          <h3>Order #{{ order.id }}</h3>
+    {% if orders %}
+        {% for order in orders %}
+        <div class="order-card">
+            <div class="order-header">
+                <h3>Order #{{ order.id }}</h3>
 
-          {% if order.shipment.first %}
-            <span class="status {{ order.shipment.first.status|lower }}">
-              {{ order.shipment.first.status }}
-            </span>
-          {% else %}
-            <span class="status other">No Shipment</span>
-          {% endif %}
-        </div>
-
-        <p><strong>Placed on:</strong> {{ order.created_at|date:"F j, Y, g:i a" }}</p>
-        <p><strong>Total:</strong> ${{ order.total }}</p>
-
-        <p class="order-actions">
-          <a href="{% url 'orders:download_invoice' order.id %}" class="btn">Download Invoice</a>
-          <a href="{% url 'shipping:shipping_details' order.id %}" class="btn-secondary">View Shipping Details</a>
-        </p>
-
-        <table class="order-table">
-          <thead>
-            <tr>
-              <th>Product</th>
-              <th>Image</th>
-              <th>Quantity</th>
-              <th>Price</th>
-            </tr>
-          </thead>
-          <tbody>
-          {% for item in order.items.all %}
-            <tr>
-              <td>{{ item.product.name }}</td>
-              <td>
-                {% if item.product.image %}
-                  <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="product-image">
+                {% if order.mode == "vulnerable" %}
+                    <span class="mode-badge mode-vulnerable">⚠ Vulnerable Mode</span>
                 {% else %}
-                  <span>No image</span>
+                    <span class="mode-badge mode-secure">✔ Secure Mode</span>
                 {% endif %}
-              </td>
-              <td>{{ item.quantity }}</td>
-              <td>${{ item.price }}</td>
-            </tr>
-          {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    {% endfor %}
-  {% else %}
-    <p>You haven’t placed any orders yet.</p>
-  {% endif %}
+            </div>
+
+            <p><strong>Placed on:</strong> {{ order.created_at|date:"F j, Y, g:i a" }}</p>
+            <p><strong>Total:</strong> ${{ order.total }}</p>
+
+            <p>
+                <a href="{% url 'orders:download_invoice' order.id %}" class="btn">Download Invoice</a>
+                <a href="{% url 'shipping:shipping_details' order.id %}" class="btn-secondary">View Shipping</a>
+            </p>
+
+            <div class="order-items">
+                <h4>Items</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Qty</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items.all %}
+                        <tr>
+                            <td>{{ item.product.name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>${{ item.price }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>You haven’t placed any orders yet.</p>
+    {% endif %}
 </div>
 {% endblock %}

@@ -1,83 +1,94 @@
 {% extends "base.html" %}
-{% block title %}Products{% endblock %}
 {% load static %}
+
+{% block title %}
+  Products{% if mode == "vuln" %} (Vulnerable){% endif %}
+{% endblock %}
+
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/products.css' %}">
+<link rel="stylesheet" href="{% static 'css/product_list.css' %}">
 <style>
-/* Vulnerable mode alert styling */
-.vulnerable-alert {
-    background-color: #ffe5e5;
-    color: #b22222;
-    border: 1px solid #b22222;
-    padding: 0.9rem 1.4rem;
-    border-radius: 6px;
-    max-width: 400px;
-    margin: 1rem auto 2rem auto;
-    text-align: center;
+.vuln-alert {
+    background: #ffe5e5;
+    border: 2px solid #cc0000;
+    color: #cc0000;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 1.5rem;
     font-weight: bold;
+}
+.product-grid {
+    display: flex;
+    gap: 1rem;
+}
+.product-column {
+    flex: 1;
+}
+.product-card {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+.product-card img {
+    max-width: 140px;
+    max-height: 140px;
+    object-fit: contain;
+    margin-bottom: 0.5rem;
+}
+.category-list {
+    margin-bottom: 1rem;
+}
+.category-list a {
+    display: block;
 }
 </style>
 {% endblock %}
 
 {% block content %}
-{% if query %}
-    <h2>Search Results{% if query %} for "{{ query }}"{% endif %}</h2>
 
-    {% if mode == 'vulnerable' %}
-        <div class="vulnerable-alert">
-            ⚠️ You are currently in <span style="text-transform: uppercase;">VULNERABLE</span> mode. Search inputs are not validated and may expose security risks.
-        </div>
-    {% endif %}
-        
-    {% if results %}
-        <div class="product-grid">
-            {% for product in results %}
-                <div class="product-card">
-                    {% if mode == 'vulnerable' %}
-                        <img src="{{ product.image_url }}" alt="{{ product.name }}">
-                    {% else %}
-                        <img src="{{ product.image.url }}" alt="{{ product.name }}">
-                    {% endif %}
-                    <h4>{{ product.name }}</h4>
-                    <p>${{ product.price }}</p>
-                    <a href="{% url 'cart:add_to_cart' product.id %}">Add to Cart</a>
-                </div>
+{% if mode == "vuln" %}
+  <div class="vuln-alert">
+      ⚠ VULNERABLE MODE: Products are loaded using <strong>raw SQL</strong>. Input is not validated and may expose security risks.
+  </div>
+{% endif %}
+
+<div class="product-grid">
+    <div class="product-column">
+        <h4>Categories</h4>
+        <div class="category-list">
+            {% for cat in categories %}
+                <a href="{% url 'products:product_list_by_category' cat.slug %}">
+                    {{ cat.name }}
+                </a>
+            {% empty %}
+                <p>No categories available.</p>
             {% endfor %}
         </div>
-    {% else %}
-        <p>No products found matching your search.</p>
-    {% endif %}
-
-    {% if mode == 'vulnerable' and raw_output %}
-        <div style="margin: 20px auto; padding: 12px; background: #111; color: #0f0; font-family: monospace; border-radius: 6px; max-width: 90%; overflow-x: auto;">
-            <h4 style="margin-bottom: 8px; color: #ff4444;">💻 Command Output</h4>
-            <pre>{{ raw_output }}</pre>
-        </div>
-    {% endif %}
-
-{% else %}
-    <div class="category-sidebar">
-        <h3>Categories</h3>
-        <ul>
-            {% for category in categories %}
-                <li><a href="?category={{ category.slug }}">{{ category.name }}</a></li>
-            {% endfor %}
-        </ul>
     </div>
 
-    <div class="product-grid">
-        {% for product in products %}
+    <div class="product-column">
+        {% for p in results %}
             <div class="product-card">
-                {% if mode == 'vulnerable' %}
-                        <img src="{{ product.image_url }}" alt="{{ product.name }}">
-                {% else %}
-                        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                {# image_url for vuln dicts, image for secure queryset #}
+                {% if p.image_url %}
+                    <img src="{{ p.image_url }}" alt="{{ p.name }}">
+                {% elif p.image %}
+                    <img src="{{ p.image.url }}" alt="{{ p.name }}">
                 {% endif %}
-                <h4>{{ product.name }}</h4>
-                <p>${{ product.price }}</p>
-                <a href="{% url 'cart:add_to_cart' product.id %}">Add to Cart</a>
+
+                <h5>{{ p.name }}</h5>
+                <p>${{ p.price }}</p>
+
+                {# Use slug exactly as stored in DB (# secure: smartphone, vuln: smartphone-vuln) #}
+                <a href="{% url 'products:product_detail' p.slug %}">View</a>
+
             </div>
+        {% empty %}
+            <p>No products found.</p>
         {% endfor %}
     </div>
-{% endif %}
+</div>
+
 {% endblock %}

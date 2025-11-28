@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}⚠ {{ product.name }} (Vulnerable) {% endblock %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/product_detail.css' %}">
+<style>
+.vuln-alert {
+    background: #ffe5e5;
+    border: 2px solid #cc0000;
+    color: #cc0000;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 1.5rem;
+    font-weight: bold;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="vuln-alert">
+    ⚠ VULNERABLE MODE: This product detail is fetched using <strong>raw SQL</strong>.  
+    No CSRF protection is applied when adding to cart.
+</div>
+
+<h2>{{ product.name }}</h2>
+<p><strong>Price:</strong> ${{ product.price }}</p>
+<p>{{ product.description|safe }}</p>  <!-- unsafe rendering for XSS demo -->
+
+{% if product.image_url %}
+  <img src="{{ product.image_url }}" alt="{{ product.name }}" style="max-width:250px;">
+{% endif %}
+
+<form action="{% url 'cart:add_to_cart' product.id %}" method="post">
+    <!-- ❌ No CSRF token included intentionally -->
+    <input type="hidden" name="csrfmiddlewaretoken" value="invalid_token">
+    <button type="submit">Add to Cart (Insecure)</button>
+</form>
+{% endblock %}

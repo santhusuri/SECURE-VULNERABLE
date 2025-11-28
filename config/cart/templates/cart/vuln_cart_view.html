@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Your Cart (Vulnerable){% endblock %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/alerts.css' %}">
+<link rel="stylesheet" href="{% static 'css/vuln_cart.css' %}">
+<style>
+.vuln-banner {
+    background: #fff0f0;
+    border: 1px solid #ef4444;
+    padding: 12px;
+    margin: 12px 0;
+    border-radius: 6px;
+    color: #9b1c1c;
+    font-weight: 700;
+    text-align: center;
+}
+.qty-btn { padding: 4px 8px; margin: 0 4px; }
+.demo-link { display:inline-block;margin-left:8px;color:#9b1c1c;text-decoration:underline; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="vuln-page">
+  <h2>Your Shopping Cart — VULNERABLE MODE</h2>
+
+  <div class="vuln-banner">
+    ⚠ You are in <strong>VULNERABLE MODE</strong>.  
+    This page intentionally demonstrates insecure behaviors:
+    no CSRF, no server-side validation, and client tampering is possible.
+  </div>
+
+  {% if cart %}
+  <table class="vuln-cart-table">
+      <thead>
+          <tr>
+              <th>Product</th>
+              <th>Qty</th>
+              <th>Price</th>
+              <th>Subtotal</th>
+              <th></th>
+          </tr>
+      </thead>
+      <tbody>
+          {% for id, item in cart.items %}
+          <tr>
+              <td>{{ item.name }}</td>
+              <td>
+                  <!-- Intentionally missing CSRF token (demo only) -->
+                  <form action="{% url 'cart:vuln_update_quantity' id %}" method="post" class="qty-form">
+                      <button type="submit" name="action" value="decrease" class="qty-btn">−</button>
+                      <input type="text" name="qty" value="{{ item.qty }}" class="qty-display">
+                      <button type="submit" name="action" value="increase" class="qty-btn">+</button>
+                  </form>
+
+                  <!-- Tamper demo links -->
+                  <a class="demo-link" href="{% url 'cart:vuln_update_quantity' id %}?qty=9999">Set qty=9999</a>
+                  <a class="demo-link" href="{% url 'cart:vuln_update_quantity' id %}?qty=-10">Set qty=-10</a>
+              </td>
+              <td>${{ item.price }}</td>
+              <td>${{ item.subtotal }}</td>
+              <td>
+                  <!-- intentionally missing CSRF token -->
+                  <form action="{% url 'cart:remove_from_cart' id %}" method="post" style="display:inline;">
+                      <button type="submit" class="btn-remove">Remove</button>
+                  </form>
+              </td>
+          </tr>
+          {% endfor %}
+      </tbody>
+  </table>
+
+  <p><strong>Total:</strong> ${{ total }}</p>
+
+  <!-- vulnerable clear/checkout (no csrf) -->
+  <form action="{% url 'cart:clear_cart' %}" method="post" style="display:inline;">
+      <button type="submit" class="btn-clear">Clear Cart</button>
+  </form>
+
+  <a href="{% url 'orders:checkout' %}" class="btn-checkout">Proceed to Checkout</a>
+  <a href="{% url 'products:product_list' %}" class="btn-continue">Continue Shopping</a>
+
+  {% else %}
+  <p>Your cart is empty.</p>
+  {% endif %}
+</div>
+{% endblock %}

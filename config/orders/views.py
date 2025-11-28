@@ -9,14 +9,14 @@ from django.db.models import Prefetch
 
 import stripe
 import json
-from datetime import date, timedelta
+import logging
 
 from orders.models import Order, OrderItem
 from shipping.models import Shipment
 from .utils import generate_invoice
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
-
+logger = logging.getLogger(__name__)
 
 # -----------------------
 # My Orders
@@ -55,6 +55,8 @@ def checkout(request):
         return redirect("cart:cart_view")
 
     if mode == "secure":
+        # ✅ Save cart snapshot in session for later webhook retrieval
+        request.session["pending_cart"] = cart
         intent = stripe.PaymentIntent.create(
             amount=int(total * 100),
             currency="usd",
@@ -73,12 +75,18 @@ def checkout(request):
 
     else:  # vulnerable mode
         if request.method == "POST":
-            entered_amount = float(request.POST.get("amount", total))
-            order = create_order_with_items(request.user, cart, entered_amount)
+            try:
+                entered_amount = float(request.POST.get("amount", total))
+            except ValueError:
+                messages.error(request, "Invalid amount entered.")
+                return redirect("orders:checkout")
+
+            order = create_order_with_items(request, request.user, cart, entered_amount)
             messages.warning(
                 request,
                 f"(Vulnerable) Payment accepted for ${entered_amount} without verification!",
             )
+            logger.warning(f"Vulnerable checkout used by user={request.user} amount={entered_amount}")
             request.session["cart"] = {}
             return redirect("orders:order_success", order.id)
 
@@ -95,13 +103,14 @@ def stripe_webhook(request):
     endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
     try:
         event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
-    except (ValueError, stripe.error.SignatureVerificationError):
-        return render(request, "orders/webhook_failed.html")
+    except (ValueError, stripe.error.SignatureVerificationError) as e:
+        logger.error(f"Stripe webhook error: {e}")
+        return JsonResponse({"status": "failed"}, status=400)
 
     if event["type"] == "payment_intent.succeeded":
         user_id = event["data"]["object"]["metadata"]["user_id"]
-        cart = {}  # TODO: load cart from session/db if needed
-        total = 0
+        cart = request.session.get("pending_cart", {})  # ✅ Retrieve cart snapshot
+        total = sum(item["price"] * item["qty"] for item in cart.values())
         user = None
         if user_id != "guest":
             from django.contrib.auth import get_user_model
@@ -110,9 +119,12 @@ def stripe_webhook(request):
                 user = User.objects.get(id=user_id)
             except User.DoesNotExist:
                 user = None
-        create_order_with_items(user, cart, total)
 
-    return render(request, "orders/webhook_success.html")
+        if cart:
+            create_order_with_items(request, user, cart, total)
+            request.session["pending_cart"] = {}  # clear after success
+
+    return JsonResponse({"status": "success"})
 
 
 # -----------------------
@@ -136,21 +148,28 @@ def create_order(request):
         total = sum(item["price"] * item["qty"] for item in cart.values())
         user = request.user if request.user.is_authenticated else None
 
-        # TODO: Verify payment_intent_id with Stripe before creating order
-        order = create_order_with_items(user, cart, total)
+        # ✅ Verify payment intent before creating order
+        intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+        if intent.status != "succeeded":
+            return JsonResponse({"error": "Payment not verified"}, status=400)
+
+        order = create_order_with_items(request, user, cart, total)
         request.session["cart"] = {}
         return JsonResponse({"order_id": order.id})
     except Exception as e:
+        logger.error(f"Create order error: {e}")
         return JsonResponse({"error": str(e)}, status=400)
 
 
 # -----------------------
 # Helper: Create Order + Items (shipment auto-created by signal)
 # -----------------------
-def create_order_with_items(user, cart, total):
+def create_order_with_items(request, user, cart, total):
+    mode = request.session.get("sim_mode", "secure")
     order = Order.objects.create(
         user=user if user and hasattr(user, "is_authenticated") and user.is_authenticated else None,
         total=total,
+        mode=mode,  # ✅ save mode for auditing
     )
 
     for product_id, item in cart.items():
@@ -161,8 +180,7 @@ def create_order_with_items(user, cart, total):
             price=item["price"],
         )
 
-    # 🚫 Do NOT create Shipment here!
-    # Shipment is automatically created by the post_save signal on Order.
+    logger.info(f"Order created id={order.id} mode={mode} total={total} user={user}")
     return order
 
 

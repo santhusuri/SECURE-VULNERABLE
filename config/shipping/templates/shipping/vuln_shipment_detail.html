@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}⚠ Vulnerable Shipment Details{% endblock %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/shipment_details.css' %}">
+<style>
+.vulnerable-alert {
+    background-color: #ffe5e5;
+    color: #b22222;
+    padding: 0.9rem;
+    border: 1px solid #b22222;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-weight: bold;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="vulnerable-alert">
+    ⚠ VULNERABLE MODE ACTIVE: No access control enforced.  
+    Any user can view shipment details by guessing the Order ID.
+</div>
+
+<h2>Shipment Details (Vulnerable)</h2>
+<p><strong>Order ID:</strong> {{ shipment.order.id }}</p>
+<p><strong>Tracking Number (Full Exposure):</strong> {{ shipment.tracking_number }}</p>
+<p><strong>Carrier:</strong> {{ shipment.carrier }}</p>
+<p><strong>Estimated Delivery:</strong> {{ shipment.estimated_delivery }}</p>
+<p><strong>Shipped Date:</strong> {{ shipment.shipped_date|default:"Not yet shipped" }}</p>
+<p><strong>Status:</strong> {{ shipment.status }}</p>
+{% endblock %}

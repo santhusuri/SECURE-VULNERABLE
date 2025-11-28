@@ -2,45 +2,69 @@
 {% load static %}
 
 {% block title %}Vulnerable Login{% endblock %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/vuln_login.css' %}">
+<style>
+  .vuln-note {
+    background:#fef2f2;
+    border:1px solid #dc2626;
+    color:#991b1b;
+    padding:10px;
+    border-radius:6px;
+    margin-bottom:1rem;
+  }
+</style>
 {% endblock %}
+
 {% block content %}
-<div class="login-container">
-    <h2>Vulnerable Login Lab</h2>
-    <p class="lab-note">LAB MODE — intentionally vulnerable. Do not deploy.</p>
+<div class="login-container" style="max-width:500px;margin:2rem auto;padding:1.4rem;border:1px solid #fca5a5;border-radius:8px;background:#fff7f7;">
+  <h2 style="color:#b91c1c;">⚠ Vulnerable Login (Lab)</h2>
 
-    <p>Try SQL injection to bypass login (example shown for demo only): <code>' OR '1'='1' --</code></p>
+  <div class="vuln-note">
+    This login is <strong>intentionally unsafe</strong>:
+    <ul style="margin-left:1rem;">
+      <li>Raw SQL string concatenation → <strong>SQL Injection</strong> possible</li>
+      <li>Echoes back username → <strong>XSS risk</strong></li>
+      <li>Passwords stored in <strong>plaintext</strong></li>
+    </ul>
+    Use payload like: <code>' OR '1'='1' --</code> to bypass login.
+  </div>
 
-    <form method="POST">
-        {% csrf_token %}
-        <label>Username:</label>
-        <input type="text" name="username" placeholder="Enter username" required>
+  <form method="POST" aria-label="Vulnerable login form">
+    {% csrf_token %}
+    <label>Username:</label>
+    <input type="text" name="username" placeholder="Enter username" required>
 
-        <label>Password:</label>
-        <!-- text type to make password visible for demo purposes -->
-        <input type="text" name="password" placeholder="Enter password" required>
+    <label>Password:</label>
+    <!-- plaintext field for demo -->
+    <input type="text" name="password" placeholder="Enter password" required>
 
-        <button type="submit">Login</button>
-    </form>
+    <button type="submit" style="background:#b91c1c;color:white;padding:.6rem 1rem;border:none;border-radius:6px;cursor:pointer;">
+      Login
+    </button>
+  </form>
 
-    <!-- Unsafe echo to demonstrate reflected XSS (LAB ONLY) -->
-    {% if attempted_username %}
-        <div class="last-attempt">
-            <strong>Last attempt (reflected unsafely):</strong>
-            <!-- WARNING: intentionally unsafe for demo -->
-            {{ attempted_username|safe }}
-        </div>
-    {% endif %}
+  <!-- Reflected XSS -->
+  {% if attempted_username %}
+    <div style="margin-top:1rem;padding:.8rem;background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;">
+      <strong>Last attempt:</strong> 
+      <!-- Intentionally unsafe reflection -->
+      {{ attempted_username|safe }}
+    </div>
+  {% endif %}
 
-    <p><a href="{% url 'accounts:register' %}">Go to Vulnerable Registration</a></p>
+  <p style="margin-top:1rem;">
+    Don’t have a vulnerable account? 
+    <a href="{% url 'accounts:vuln_register' %}" style="color:#b91c1c;text-decoration:underline;">Register here</a>.
+  </p>
 
-    {% if messages %}
-        <div class="messages">
-            {% for message in messages %}
-                <p class="{{ message.tags }}">{{ message }}</p>
-            {% endfor %}
-        </div>
-    {% endif %}
+  {% if messages %}
+    <div class="messages" style="margin-top:12px;">
+      {% for message in messages %}
+        <p class="{{ message.tags }}">{{ message }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
 </div>
 {% endblock %}

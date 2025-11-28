@@ -1,0 +1,9 @@
+{% if mode == "secure" %}
+<div class="alert-banner alert-secure">
+    ✔ You are running in <strong>SECURE MODE</strong>. Standard protections are enabled.
+</div>
+{% elif mode == "vulnerable" %}
+<div class="alert-banner alert-vulnerable">
+    ⚠ You are running in <strong>VULNERABLE MODE</strong>. Protections are intentionally disabled for testing!
+</div>
+{% endif %}

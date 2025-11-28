@@ -1,0 +1,14 @@
+<div class="mode-fragment vulnerable-fragment" style="border:2px solid #f00; padding:12px;">
+  <h2 style="color: #b00;">⚠️ Vulnerable Mode Active (LAB ONLY)</h2>
+  <p>This page intentionally demonstrates insecure behaviour — do not use with production data.</p>
+
+  <!-- Example vulnerable element: login form without CSRF (lab only) -->
+  <form method="post" action="/accounts/login/" style="margin-top:1rem;">
+    <!-- intentionally missing {% csrf_token %} -->
+    <label>Username</label>
+    <input name="username" type="text">
+    <label>Password</label>
+    <input name="password" type="password">
+    <button type="submit">Login (no CSRF)</button>
+  </form>
+</div>

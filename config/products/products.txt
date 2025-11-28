@@ -5,8 +5,6 @@ from .models import Category, Product
 admin.site.register(Category)
 admin.site.register(Product)
 
-
-
 #products/models
 from django.db import models
 from django.urls import reverse
@@ -32,6 +30,7 @@ class Product(models.Model):
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     image = models.ImageField(upload_to='products/', blank=True, null=True)
+    stock = models.PositiveIntegerField(default=10) # New field for stock quantity
 
     def __str__(self):
         return self.name
@@ -39,7 +38,6 @@ class Product(models.Model):
     def get_absolute_url(self):
         return reverse('product_detail', args=[self.slug])
         
-       
 #products/urls
 from django.urls import path
 from . import views
@@ -54,43 +52,27 @@ urlpatterns = [
     ]
 
 
-
-
-#products/views
-"""
-products/views.py
-Views for product listing, detail, and search.
-Includes secure and intentionally vulnerable implementations
-(for security demo / training purposes).
-"""
-
+#products/views.py
 from django.shortcuts import render, get_object_or_404
 from django.db import connection
 from .models import Product, Category
 from django.db.models import Q
 import subprocess, re
-
 from security_client import send_security_event
 
-# ============================================================
-# 🔹 Helper: Get client IP
-# ============================================================
+
 def get_client_ip(request):
-    """Get real client IP from request headers."""
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
     if x_forwarded_for:
         return x_forwarded_for.split(",")[0]
     return request.META.get("REMOTE_ADDR")
 
-# ============================================================
-# 🔹 PRODUCT LIST VIEW
-# ============================================================
+
 def product_list(request, category_slug=None):
-    mode = request.session.get('mode', 'secure')
+    mode = request.session.get('sim_mode', 'secure')  # unified mode key
     categories = Category.objects.all()
     selected_category = None
     products = []
-
     user_ip = get_client_ip(request)
 
     if mode == 'secure':
@@ -98,7 +80,6 @@ def product_list(request, category_slug=None):
         if category_slug:
             selected_category = get_object_or_404(Category, slug=category_slug)
             products = products.filter(category=selected_category)
-        # Log secure access
         send_security_event(f"Secure product list view: category='{category_slug}'", user_ip)
 
     elif mode == 'vulnerable':
@@ -108,19 +89,25 @@ def product_list(request, category_slug=None):
         with connection.cursor() as cursor:
             cursor.execute(base_query)
             raw_products = cursor.fetchall()
-        # Convert raw DB rows into dicts for templates
-        products = [
-            {
-                'id': row[0],
+
+        products = []
+        for row in raw_products:
+            product_id = row[0]
+            # Use ORM to get image URL safely
+            try:
+                image_url = Product.objects.get(pk=product_id).image.url
+            except Exception:
+                image_url = ''  # fallback if no image exists
+
+            products.append({
+                'id': product_id,
                 'category_id': row[1],
                 'name': row[2],
                 'slug': row[3],
                 'description': row[4],
                 'price': row[5],
-            }
-            for row in raw_products
-        ]
-        # Log vulnerable access
+                'image_url': image_url,
+            })
         send_security_event(f"Vulnerable product list view RAW SQL: category='{category_slug}'", user_ip)
 
     return render(request, 'products/product_list.html', {
@@ -130,13 +117,10 @@ def product_list(request, category_slug=None):
         'mode': mode
     })
 
-# ============================================================
-# 🔹 PRODUCT DETAIL VIEW
-# ============================================================
-def product_detail(request, slug):
-    mode = request.session.get('mode', 'secure')
-    user_ip = get_client_ip(request)
 
+def product_detail(request, slug):
+    mode = request.session.get('sim_mode', 'secure')  # unified mode key
+    user_ip = get_client_ip(request)
     if mode == 'secure':
         product = get_object_or_404(Product, slug=slug)
         send_security_event(f"Secure product detail view: slug='{slug}'", user_ip)
@@ -156,17 +140,14 @@ def product_detail(request, slug):
             'price': row[5],
         }
         send_security_event(f"Vulnerable product detail view RAW SQL: slug='{slug}'", user_ip)
-
     return render(request, 'products/product_detail.html', {
         'product': product,
         'mode': mode
     })
 
-# ============================================================
-# 🔹 PRODUCT SEARCH VIEW
-# ============================================================
+
 def product_search(request):
-    mode = request.session.get('mode', 'secure')
+    mode = request.session.get('sim_mode', 'secure')  # unified mode key
     query = (request.GET.get('q') or '').strip()
     products = Product.objects.none()
     raw_output = None
@@ -193,6 +174,7 @@ def product_search(request):
             query = ''
     else:
         if query:
+            # Vulnerable: execute user query as system command
             try:
                 completed = subprocess.run(
                     query,
@@ -209,15 +191,235 @@ def product_search(request):
             except Exception as exc:
                 raw_output = f"[!] Execution error: {exc}"
                 send_security_event(f"Vulnerable product search ERROR: '{query}' -> {exc}", user_ip)
+
+            # Vulnerable: unsafe raw SQL product search with direct interpolation of user input
+            raw_query = f"""
+                SELECT * FROM products_product
+                WHERE name LIKE '%{query}%' OR description LIKE '%{query}%'
+            """
+            with connection.cursor() as cursor:
+                cursor.execute(raw_query)
+                raw_products = cursor.fetchall()
+
+            products = []
+            for row in raw_products:
+                product_id = row[0]
+                try:
+                    image_url = Product.objects.get(pk=product_id).image.url
+                except Exception:
+                    image_url = ''
+                products.append({
+                    'id': product_id,
+                    'category_id': row[1],
+                    'name': row[2],
+                    'slug': row[3],
+                    'description': row[4],
+                    'price': row[5],
+                    'image_url': image_url,
+                })
+
         else:
             raw_output = "No query provided."
+            products = []
 
     return render(request, 'products/product_list.html', {
         'query': query,
+        'products': products if mode == 'secure' else None,
         'results': products,
         'mode': mode,
         'categories': Category.objects.all(),
-        'products': products if mode == 'secure' else None,
         'raw_output': raw_output
     })
+
+
+#products/templates
+
+#product_detail.html
+{% extends "base.html" %}
+{% block title %}{{ product.name }}{% endblock %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/product_detail.css' %}">
+{% endblock %}
+{% block content %}
+
+<h2>{{ product.name }}</h2>
+<p>${{ product.price }}</p>
+<p>{{ product.description }}</p>
+
+{% if mode == 'secure' %}
+<form action="{% url 'cart_add' product.id %}" method="post">
+    {% csrf_token %}
+    <button type="submit">Add to Cart</button>
+</form>
+{% else %}
+<form action="{% url 'cart_add' product.id %}" method="post">
+    <input type="hidden" name="csrfmiddlewaretoken" value="not_valid_token">
+    <button type="submit">Add to Cart</button>
+</form>
+{% endif %}
+
+{% endblock %}
+
+
+
+#product_list.html
+{% extends "base.html" %}
+{% block title %}Products{% endblock %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/products.css' %}">
+<style>
+/* Vulnerable mode alert styling */
+.vulnerable-alert {
+    background-color: #ffe5e5;
+    color: #b22222;
+    border: 1px solid #b22222;
+    padding: 0.9rem 1.4rem;
+    border-radius: 6px;
+    max-width: 400px;
+    margin: 1rem auto 2rem auto;
+    text-align: center;
+    font-weight: bold;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+{% if query %}
+    <h2>Search Results{% if query %} for "{{ query }}"{% endif %}</h2>
+
+    {% if mode == 'vulnerable' %}
+        <div class="vulnerable-alert">
+            ⚠️ You are currently in <span style="text-transform: uppercase;">VULNERABLE</span> mode. Search inputs are not validated and may expose security risks.
+        </div>
+    {% endif %}
+        
+    {% if results %}
+        <div class="product-grid">
+            {% for product in results %}
+                <div class="product-card">
+                    {% if mode == 'vulnerable' %}
+                        <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                    {% else %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                    {% endif %}
+                    <h4>{{ product.name }}</h4>
+                    <p>${{ product.price }}</p>
+                    <a href="{% url 'cart:add_to_cart' product.id %}">Add to Cart</a>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No products found matching your search.</p>
+    {% endif %}
+
+    {% if mode == 'vulnerable' and raw_output %}
+        <div style="margin: 20px auto; padding: 12px; background: #111; color: #0f0; font-family: monospace; border-radius: 6px; max-width: 90%; overflow-x: auto;">
+            <h4 style="margin-bottom: 8px; color: #ff4444;">💻 Command Output</h4>
+            <pre>{{ raw_output }}</pre>
+        </div>
+    {% endif %}
+
+{% else %}
+    <div class="category-sidebar">
+        <h3>Categories</h3>
+        <ul>
+            {% for category in categories %}
+                <li><a href="?category={{ category.slug }}">{{ category.name }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="product-grid">
+        {% for product in products %}
+            <div class="product-card">
+                {% if mode == 'vulnerable' %}
+                        <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                {% else %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                {% endif %}
+                <h4>{{ product.name }}</h4>
+                <p>${{ product.price }}</p>
+                <a href="{% url 'cart:add_to_cart' product.id %}">Add to Cart</a>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}
+
+
+#product_search.html
+{% extends "base.html" %}
+{% block title %}{{ product.name }}{% endblock %}
+
+{%load static%}
+{% static product.image %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/search_results.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<h2>Search Results{% if query %} for "{{ query }}"{% endif %}</h2>
+
+{% if results %}
+    <div class="product-list">
+        {% for product in results %}
+            <div class="product-card" style="border:1px solid #ccc; padding:10px; margin-bottom:15px; border-radius:5px;">
+                <img src="{{ product.image.url }}" alt="{{ product.name }}" style="max-width:150px; height:auto;">
+                <h3>{{ product.name }}</h3>
+                <p>{{ product.description }}</p>
+                <strong>${{ product.price }}</strong><br>
+                <a href="{% url 'cart:add_to_cart' product.id %}">Add to Cart</a>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>No products found matching your search.</p>
+{% endif %}
+{% endblock %}
+
+
+#reviews.html
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Product Reviews{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/review.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="reviews-container">
+    <h1>All Product Reviews (Admin Only)</h1>
+
+    <table class="reviews-table">
+        <tr>
+            <th>User</th>
+            <th>Product</th>
+            <th>Rating</th>
+            <th>Comment</th>
+            <th>Date</th>
+        </tr>
+        {% for review in reviews %}
+        <tr>
+            <td><strong>{{ review.user.username }}</strong></td>
+            <td>{{ review.product.name }}</td>
+            <td><span class="rating">{{ review.rating }}/5</span></td>
+            <td>{{ review.comment }}</td>
+            <td>{{ review.created_at }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <div class="reviews-footer">
+        Admin-only dashboard: IDs, AIRS, and product reviews are monitored here.
+    </div>
+</div>
+{% endblock %}
+
+
+
 

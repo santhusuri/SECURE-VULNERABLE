@@ -2,147 +2,238 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>{% block title %}E-Commerce{% endblock %}</title>
- <link rel="stylesheet" href="{% static 'css/styles.css' %}">
- <link rel="stylesheet" href="{% static 'css/main.css' %}">
- <link rel="stylesheet" href="{% static 'css/login.css' %}">
- {% block extra_css %}{% endblock %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}E-Commerce{% endblock %}</title>
+
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+  <link rel="stylesheet" href="{% static 'css/login.css' %}">
+  {% block extra_css %}{% endblock %}
+
+  <style>
+    /* mode banner styles */
+    .mode-banner-vuln {
+      background: linear-gradient(90deg,#7f1d1d,#b91c1c);
+      color: #fff;
+      padding: 10px 12px;
+      text-align: center;
+      font-weight: 600;
+      position: relative;
+      z-index: 9999;
+    }
+    .mode-banner-secure {
+      background: linear-gradient(90deg,#065f46,#0ea5a6);
+      color: #fff;
+      padding: 6px 12px;
+      text-align: center;
+      font-weight: 600;
+    }
+    .mode-banner-controls { position: absolute; right: 12px; top: 6px; }
+    .mode-banner-controls button { border: none; padding: 6px 10px; border-radius: 6px; cursor:pointer; }
+  </style>
 </head>
 <body>
 
- <!-- ================= Navbar ================= -->
- <nav class="navbar">
-   <div class="logo">
-     <a href="{% url 'home' %}">MyShop</a>
-   </div>
+  <!-- ensure CSRF cookie is set -->
+  <form style="display:none;">{% csrf_token %}</form>
 
-   <div class="nav-links">
-    {% if user.is_authenticated %}
+  <!-- Top mode banner -->
+  <div id="mode-banner-root" aria-live="polite"></div>
+
+  <!-- ================= Navbar ================= -->
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="logo"><a href="{% url 'home' %}">MyShop</a></div>
+
+    <div class="nav-links">
+      {% if user.is_authenticated %}
         <a href="{% url 'products:product_list' %}">Products</a>
         <a href="{% url 'cart:cart_view' %}">Cart</a>
         <a href="{% url 'orders:my_orders' %}">Orders</a>
         <a href="{% url 'accounts:profile' %}">Profile</a>
         <a href="{% url 'accounts:logout' %}">Logout</a>
-    {% else %}
+      {% else %}
+        <!-- Guests can still browse products -->
+        <a href="{% url 'products:product_list' %}">Products</a>
         <a href="{% url 'accounts:login' %}">Login</a>
         <a href="{% url 'accounts:register' %}">Register</a>
+      {% endif %}
+    </div>
+
+    <!-- Toggle Panel -->
+    <div class="toggle-panel" style="display:flex; align-items:center; gap:8px;">
+      <span id="vuln-label" class="vuln-label" style="font-weight:600;"></span>
+      <button id="toggle-mode-btn" class="toggle-btn" aria-pressed="false" aria-label="Toggle lab mode"></button>
+    </div>
+  </nav>
+
+  <!-- ================= Main Container ================= -->
+  <div class="container">
+    {% if messages %}
+      <div class="messages" role="status" aria-live="polite">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+      </div>
     {% endif %}
-</div>
 
-   <!-- Toggle Panel -->
-   <div class="toggle-panel">
-     <span id="vuln-label" class="vuln-label"></span>
-     <button id="toggle-mode-btn" class="toggle-btn"></button>
-   </div>
- </nav>
+    {% if user.is_authenticated %}
+      <form method="get" action="{% url 'products:product_search' %}" class="fixed-search-form" role="search">
+        <input type="text" name="q" placeholder="Search products..." required class="fixed-search-input" aria-label="Search products">
+        <button type="submit" class="fixed-search-button">Search</button>
+      </form>
+    {% endif %}
 
- <!-- ================= Main Container ================= -->
- <div class="container">
-   {% if messages %}
-     <div class="messages">
-       {% for message in messages %}
-         <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-       {% endfor %}
-     </div>
-   {% endif %}
+    {% block content %}{% endblock %}
+  </div>
 
-   {% if user.is_authenticated %}
-   <form method="get" action="{% url 'products:product_search' %}" class="fixed-search-form">
-     <input type="text" name="q" placeholder="Search products..." required class="fixed-search-input">
-     <button type="submit" class="fixed-search-button">Search</button>
-   </form>
-   {% endif %}
+  <!-- ================= Footer ================= -->
+  <footer class="main-footer">
+    <div class="footer-container">
+      <div class="footer-column">
+        <h3>Explore</h3>
+        <ul>
+          <li><a href="#about"><span>›</span> About</a></li>
+          <li><a href="{% url 'products:product_list' %}"><span>›</span> Shop</a></li>
+          {% if user.is_authenticated %}
+            <li><a href="{% url 'orders:my_orders' %}"><span>›</span> My Orders</a></li>
+          {% endif %}
+        </ul>
+      </div>
+      <div class="footer-column">
+        <h3>Useful Links</h3>
+        <ul>
+          <li><a href="mailto:support@myshop.com"><span>›</span> Contact</a></li>
+          {% if not user.is_authenticated %}
+            <li><a href="{% url 'accounts:login' %}"><span>›</span> Login</a></li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">© {{ now|date:'Y' }} ShopSite</div>
+  </footer>
 
-   {% block content %}{% endblock %}
- </div>
+  <!-- ================= Context Variables for JS ================= -->
+  <script>
+    // server-provided initial state (keeps first render consistent)
+    const INITIAL_SESSION_MODE = "{{ simulation_mode|default:'secure' }}";
+  </script>
 
- <!-- ================= Footer ================= -->
- <footer class="main-footer">
-   <div class="footer-container">
-     <div class="footer-column">
-       <h3>Explore</h3>
-       <ul>
-         <li><a href="#about"><span>›</span> About</a></li>
-         <li><a href="{% url 'products:product_list' %}"><span>›</span> Shop</a></li>
-         <li><a href="#"><span>›</span> FAQ</a></li>
-       </ul>
-     </div>
-     <div class="footer-column">
-       <h3>Useful Links</h3>
-       <ul>
-         <li><a href="#"><span>›</span> Support</a></li>
-         <li><a href="mailto:support@myshop.com"><span>›</span> Contact</a></li>
-       </ul>
-     </div>
-   </div>
+  <!-- ================= Mode handling JS (simple & effective) ================= -->
+  <script>
+(function () {
+  const bannerRoot = document.getElementById('mode-banner-root');
+  const vulnLabel = document.getElementById('vuln-label');
+  const toggleBtn = document.getElementById('toggle-mode-btn');
 
-   <div class="footer-bottom">
-     © {{ now|date:'Y' }} ShopSite
-   </div>
- </footer>
+  let sessionMode = INITIAL_SESSION_MODE;
+  let globalVuln = false;
 
- <!-- ================= Context Variables for JS ================= -->
-<script>
-  window.APP_CONTEXT = {
-    mode: "{{ simulation_mode|default:'secure' }}",  // uses context processor
-    csrfToken: "{{ csrf_token }}"
-  };
-
-  document.addEventListener("DOMContentLoaded", function() {
-    const toggleBtn = document.getElementById('toggle-mode-btn');
-    const vulnLabel = document.getElementById('vuln-label');
-    let currentMode = window.APP_CONTEXT.mode;
-
-    function updateUI(mode) {
-      if (mode === "vulnerable") {
-        toggleBtn.textContent = "Vulnerable Mode";
-        toggleBtn.style.backgroundColor = "#dc3545"; // red
-        toggleBtn.style.color = "#fff";
-        vulnLabel.style.display = "inline-block";
-        vulnLabel.textContent = "⚠ VULNERABLE LAB ACTIVE";
-      } else {
-        toggleBtn.textContent = "Secure Mode";
-        toggleBtn.style.backgroundColor = "#4CAF50"; // green
-        toggleBtn.style.color = "#fff";
-        vulnLabel.style.display = "inline-block";
-        vulnLabel.textContent = "✔ SECURE MODE";
-      }
+  function getCookie(name) {
+    if (!document.cookie) return null;
+    const pairs = document.cookie.split(';').map(c => c.trim());
+    for (const p of pairs) {
+      if (p.startsWith(name + '=')) return decodeURIComponent(p.substring(name.length + 1));
     }
+    return null;
+  }
 
-    // Initialize UI
-    updateUI(currentMode);
+  function renderBanner() {
+    bannerRoot.innerHTML = '';
+    const isVuln = globalVuln && sessionMode === 'vulnerable';
+    if (isVuln) {
+      const div = document.createElement('div');
+      div.className = 'mode-banner-vuln';
+      div.innerHTML = '⚠️ <strong>VULNERABLE LAB MODE ACTIVE</strong>';
+      bannerRoot.appendChild(div);
+      vulnLabel.textContent = '⚠ VULNERABLE LAB';
+      toggleBtn.textContent = 'Vulnerable Mode';
+      toggleBtn.setAttribute('aria-pressed', 'true');
+      toggleBtn.style.backgroundColor = '#dc3545';
+      toggleBtn.style.color = '#fff';
+    } else {
+      const div = document.createElement('div');
+      div.className = 'mode-banner-secure';
+      div.textContent = '✔ Secure Mode — vulnerabilities disabled (or session not toggled).';
+      bannerRoot.appendChild(div);
+      vulnLabel.textContent = '✔ SECURE';
+      toggleBtn.textContent = 'Secure Mode';
+      toggleBtn.setAttribute('aria-pressed', 'false');
+      toggleBtn.style.backgroundColor = '#4CAF50';
+      toggleBtn.style.color = '#fff';
+    }
+  }
 
-    // Click listener to toggle mode
-    toggleBtn.addEventListener('click', function() {
-      fetch('/accounts/toggle_mode/', {
+  async function fetchModeStatus() {
+    try {
+      const r = await fetch('/mode-status/', { credentials: 'same-origin' });
+      if (!r.ok) throw new Error('status ' + r.status);
+      const json = await r.json();
+      globalVuln = Boolean(json.global_vulnerable_mode);
+      sessionMode = json.session_mode || sessionMode;
+      renderBanner();
+    } catch (e) {
+      // still render something
+      console.warn('mode-status fetch error', e);
+      globalVuln = false;
+      renderBanner();
+    }
+  }
+
+  async function toggleMode() {
+    // ask every time
+    if (!confirm('⚠️ Are you sure you want to switch lab mode?')) return;
+
+    try {
+      const csrf = getCookie('csrftoken');
+      const headers = { 'Content-Type': 'application/json' };
+      if (csrf) headers['X-CSRFToken'] = csrf;
+
+      const r = await fetch('/accounts/toggle_mode/', {
         method: 'POST',
-        headers: {
-          'X-CSRFToken': window.APP_CONTEXT.csrfToken,
-          'Content-Type': 'application/json'
-        },
+        credentials: 'same-origin',
+        headers,
         body: JSON.stringify({})
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.mode) {
-          currentMode = data.mode;
-          updateUI(currentMode);
-          alert(`Switched to ${currentMode.toUpperCase()} MODE!`);
-          window.location.reload(); // reload to reflect changes globally
-        }
-      })
-      .catch(() => {
-        alert("⚠️ Error toggling mode!");
       });
+
+      if (!r.ok) {
+        const text = await r.text().catch(() => '');
+        throw new Error('HTTP ' + r.status + ' ' + text);
+      }
+
+      const json = await r.json();
+      if (json.mode) {
+        sessionMode = json.mode;
+        alert('✅ Mode changed to: ' + json.mode.toUpperCase()); // confirmation every time
+        renderBanner();
+        // reload so templates/context reflect new mode
+        window.location.reload();
+      } else if (json.error) {
+        throw new Error('Server error: ' + json.error);
+      }
+    } catch (err) {
+      console.error('toggleMode error', err);
+      alert('❌ Could not change mode — check console for details.');
+    }
+  }
+
+  // attach handler
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      toggleMode();
     });
-  });
-</script>
+  }
 
+  // initial render & poll
+  renderBanner();
+  fetchModeStatus();
+  setInterval(fetchModeStatus, 5000);
+})();
+  </script>
 
- <!-- ================= JavaScript Files ================= -->
- <script src="{% static 'js/vuln_lab.js' %}"></script>
+  <!-- ================= JavaScript Files ================= -->
+  <script src="{% static 'js/vuln_lab.js' %}"></script>
 
 </body>
 </html>

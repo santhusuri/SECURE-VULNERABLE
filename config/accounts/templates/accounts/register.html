@@ -1,25 +1,47 @@
 {% extends "base.html" %}
-{% block title %}Register{% endblock %}
 {% load static %}
+
+{% block title %}Secure Registration{% endblock %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/register.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="form-container">
-    <h2>Register</h2>
+<div class="form-container" style="max-width:680px;margin:2rem auto;padding:1.6rem;border:1px solid #e6eef8;border-radius:8px;background:#f8fbff;">
+  <h2 style="color:#0f172a;">🛡 Secure Registration</h2>
 
-    {% if registered %}
-        <div class="register-success">
-            Registration complete! You can now
-            <a href="{% url 'accounts:login' %}">login here</a>.
-        </div>
-    {% else %}
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Register</button>
-        </form>
-    {% endif %}
+  <p style="color:#334155;font-size:.95rem;margin-bottom:1rem;">
+    Use this secure registration to create real accounts. Passwords are hashed by Django (PBKDF2/Argon2 depending on config),
+    and the form is protected with CSRF tokens and server-side validation.
+  </p>
+
+  {% if registered %}
+    <div style="padding:1rem;background:#ecfdf5;border:1px solid #bbf7d0;border-radius:6px;margin-bottom:1rem;">
+      <strong>✅ Registration complete!</strong> You can now
+      <a href="{% url 'accounts:login' %}" style="color:#0f172a;text-decoration:underline;">log in</a>.
+    </div>
+  {% else %}
+    <form method="post" aria-label="Secure registration form">
+      {% csrf_token %}
+      {{ form.as_p }}
+
+      <button type="submit" style="background:#0f172a;color:#fff;padding:.6rem 1rem;border:none;border-radius:6px;cursor:pointer;">
+        Register
+      </button>
+    </form>
+  {% endif %}
+
+  <p style="margin-top:1rem;color:#475569;">
+    Already registered? <a href="{% url 'accounts:login' %}" style="color:#0f172a;text-decoration:underline;">Login here</a>.
+  </p>
+
+  {% if messages %}
+    <div class="messages" style="margin-top:12px;">
+      {% for message in messages %}
+        <p class="{{ message.tags }}">{{ message }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
 </div>
 {% endblock %}

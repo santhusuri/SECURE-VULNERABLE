@@ -1,59 +1,69 @@
 {% extends "base.html" %}
-{% block title %}Order Success{% endblock %}
 {% load static %}
 
+{% block title %}Order Success{% endblock %}
+
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/order_success.css' %}">
+<link rel="stylesheet" href="{% static 'css/orders.css' %}">
+<style>
+    .order-success {
+        text-align: center;
+        margin: 2rem auto;
+        padding: 2rem;
+        max-width: 600px;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        background: #fff;
+    }
+    .order-success h2 {
+        color: #4CAF50;
+    }
+    .mode-badge {
+        display: inline-block;
+        padding: 0.4rem 0.8rem;
+        margin-top: 1rem;
+        font-weight: bold;
+        border-radius: 6px;
+    }
+    .mode-secure {
+        background: #e6f9e6;
+        color: #2e7d32;
+        border: 1px solid #2e7d32;
+    }
+    .mode-vulnerable {
+        background: #ffe6e6;
+        color: #b22222;
+        border: 1px solid #b22222;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="order-success-container">
-    <h2>✅ Order Completed</h2>
-    <p>Thank you for your purchase, {{ order.user.username|default:"Guest" }}!</p>
-    <p class="timestamp">Placed on: {{ order.created_at|date:"F j, Y, g:i a" }}</p>
+<div class="order-success">
+    <h2>✅ Order Placed Successfully!</h2>
+    <p>Thank you for your order.</p>
 
-    <a class="btn" href="{% url 'products:product_list' %}">Continue Shopping</a>
+    <p><strong>Order ID:</strong> {{ order.id }}</p>
+    <p><strong>Total:</strong> ${{ order.total }}</p>
 
-    {% if order.id %}
-        <p>
-          <a class="btn-secondary" href="{% url 'shipping:shipping_details' order.id %}">
-            View Shipping Details
-          </a>
-        </p>
+    {% if order.mode == "vulnerable" %}
+        <div class="mode-badge mode-vulnerable">
+            ⚠ VULNERABLE MODE – Order not securely processed
+        </div>
+    {% else %}
+        <div class="mode-badge mode-secure">
+            ✔ SECURE MODE – Order processed safely
+        </div>
     {% endif %}
 
-    <div class="order-details">
-        <h3>Order #{{ order.id }}</h3>
-        <p><strong>Total:</strong> ${{ order.total }}</p>
+    <div style="margin-top: 2rem;">
+        <a href="{% url 'orders:download_invoice' order.id %}" class="btn btn-checkout">
+            📄 Download Invoice (PDF)
+        </a>
+    </div>
 
-        <table class="order-table">
-            <thead>
-                <tr>
-                    <th>Product</th>
-                    <th>Image</th>
-                    <th>Quantity</th>
-                    <th>Price</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for item in order.items.all %}
-                <tr>
-                    <td>{{ item.product.name }}</td>
-                    <td>
-                        {% if item.product.image %}
-                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="product-image">
-                        {% else %}
-                            <span>No image</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ item.quantity }}</td>
-                    <td>${{ item.price }}</td>
-                </tr>
-            {% empty %}
-                <tr><td colspan="4">No products found for this order.</td></tr>
-            {% endfor %}
-            </tbody>
-        </table>
+    <div style="margin-top: 1rem;">
+        <a href="{% url 'products:product_list' %}" class="btn btn-continue">Continue Shopping</a>
     </div>
 </div>
 {% endblock %}

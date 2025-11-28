@@ -1,29 +1,38 @@
 {% extends "base.html" %}
-{% block title %}{{ product.name }}{% endblock %}
+{% block title %}Search Results{% endblock %}
+{% load static %}
 
-{%load static%}
-{% static product.image %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/search_results.css' %}">
+<link rel="stylesheet" href="{% static 'css/alerts.css' %}">
 {% endblock %}
 
 {% block content %}
+{% include "includes/mode_banner.html" %}
 
-<h2>Search Results{% if query %} for "{{ query }}"{% endif %}</h2>
+<h2>🔎 Search Results{% if query %} for "{{ query }}"{% endif %}</h2>
 
-{% if results %}
+{% if query %}
+  {% if results %}
     <div class="product-list">
-        {% for product in results %}
-            <div class="product-card" style="border:1px solid #ccc; padding:10px; margin-bottom:15px; border-radius:5px;">
-                <img src="{{ product.image.url }}" alt="{{ product.name }}" style="max-width:150px; height:auto;">
-                <h3>{{ product.name }}</h3>
-                <p>{{ product.description }}</p>
-                <strong>${{ product.price }}</strong><br>
-                <a href="{% url 'cart:add_to_cart' product.id %}">Add to Cart</a>
-            </div>
-        {% endfor %}
+      {% for product in results %}
+        <div class="product-card" style="border:1px solid #ddd; padding:12px; margin-bottom:12px; border-radius:6px;">
+          {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" style="max-width:120px; height:auto; float:left; margin-right:12px;">
+          {% endif %}
+          <h3>{{ product.name }}</h3>
+          <p>{{ product.description|truncatechars:160 }}</p>
+          <strong>${{ product.price }}</strong><br>
+          <a href="{% url 'products:product_detail' product.slug %}">View</a> |
+          <a href="{% url 'cart:add_to_cart' product.id %}">Add to Cart</a>
+          <div style="clear:both;"></div>
+        </div>
+      {% endfor %}
     </div>
-{% else %}
+  {% else %}
     <p>No products found matching your search.</p>
+  {% endif %}
+{% else %}
+  <p>Enter a search term to find products.</p>
 {% endif %}
 {% endblock %}

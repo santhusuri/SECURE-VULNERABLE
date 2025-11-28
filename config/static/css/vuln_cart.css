@@ -1,0 +1,166 @@
+/* ==============================
+   Vulnerable Cart Styles
+   ============================== */
+
+/* Page wrapper with watermark */
+.vuln-page {
+    position: relative;
+    padding: 20px;
+}
+
+.vuln-page::before {
+    content: "⚠ VULNERABLE MODE DEMO ⚠";
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-20deg);
+    font-size: 4rem;
+    font-weight: 900;
+    color: rgba(239, 68, 68, 0.08); /* red but very faint */
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 0;
+}
+
+/* Warning banner */
+.vuln-banner {
+    background: #fff0f0;
+    border: 1px solid #ef4444;
+    padding: 12px;
+    margin: 12px 0;
+    border-radius: 6px;
+    color: #9b1c1c;
+    font-weight: 700;
+    text-align: center;
+    z-index: 1;
+    position: relative;
+}
+
+/* Cart table */
+.vuln-cart-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    border: 1px solid #fca5a5;
+    background: white;
+    position: relative;
+    z-index: 1;
+}
+
+.vuln-cart-table th,
+.vuln-cart-table td {
+    border: 1px solid #fca5a5;
+    padding: 10px;
+    text-align: center;
+}
+
+.vuln-cart-table th {
+    background: #fee2e2;
+    color: #991b1b;
+    font-weight: 600;
+}
+
+/* Quantity form */
+.qty-form {
+    display: inline-flex;
+    align-items: center;
+}
+
+.qty-btn {
+    padding: 4px 8px;
+    margin: 0 4px;
+    border: 1px solid #ef4444;
+    background: #fee2e2;
+    color: #991b1b;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background 0.2s ease;
+}
+
+.qty-btn:hover {
+    background: #fecaca;
+}
+
+.qty-display {
+    text-align: center;
+    width: 44px;
+    border: 1px solid #ef4444;
+    padding: 4px;
+}
+
+/* Tamper demo links */
+.demo-link {
+    display: inline-block;
+    margin-left: 8px;
+    color: #dc2626;
+    font-size: 0.9rem;
+    text-decoration: underline;
+}
+
+.demo-link:hover {
+    color: #991b1b;
+}
+
+/* Remove button */
+.btn-remove {
+    background: #fee2e2;
+    border: 1px solid #ef4444;
+    color: #b91c1c;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.btn-remove:hover {
+    background: #fecaca;
+}
+
+/* Clear Cart button */
+.btn-clear {
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    color: #92400e;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin: 10px 10px 0 0;
+    font-weight: 500;
+    transition: background 0.2s ease;
+}
+
+.btn-clear:hover {
+    background: #fde68a;
+}
+
+/* Checkout button */
+.btn-checkout {
+    background: #dc2626;
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: white;
+    font-weight: 600;
+    margin-right: 8px;
+    transition: background 0.2s ease;
+}
+
+.btn-checkout:hover {
+    background: #b91c1c;
+}
+
+/* Continue Shopping button */
+.btn-continue {
+    background: #6b7280;
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: white;
+    font-weight: 500;
+    transition: background 0.2s ease;
+}
+
+.btn-continue:hover {
+    background: #4b5563;
+}

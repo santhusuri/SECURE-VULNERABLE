@@ -1,5 +1,4 @@
-404.html
-
+#404.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,65 +13,7 @@
 </html>
 
 
-main.html
-
-{% extends "base.html" %}
-
-{% block title %}Welcome to MyShop{% endblock %}
-
-{%load static%}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/main.css' %}">
-{% endblock %}
-
-{% block content %}
-<section class="intro-section">
-  <h2>Welcome to MyShop</h2>
-  <p>We offer a wide range of high-quality products at unbeatable prices. 
-     From electronics to fashion, we’ve got something for everyone!</p>
-
-  <div class="promo-grid">
-    <div class="promo-item">
-      <h3>🔥 Latest Gadgets</h3>
-      <p>Stay ahead with the newest tech trends.</p>
-    </div>
-    <div class="promo-item">
-      <h3>💎 Premium Quality</h3>
-      <p>Carefully selected products you can trust.</p>
-    </div>
-    <div class="promo-item">
-      <h3>🚚 Fast Delivery</h3>
-      <p>Get your order quickly and safely.</p>
-    </div>
-  </div>
-
-  <section id="about" class="about-section">
-  <h2>About MyShop</h2>
-  <p>
-    MyShop is your trusted online destination for a wide range of high-quality products. From the latest electronics to trendy fashion and essential home goods, we carefully curate our collection to ensure unbeatable quality and value. Our mission is to provide a seamless shopping experience with fast delivery, secure transactions, and exceptional customer support. Whether you're upgrading your gadgets or refreshing your wardrobe, MyShop is here to help you find exactly what you need with confidence and convenience.
-  </p>
-</section>
-
-
-  <!-- Optional: Call to action 
-  <div class="cta">
-    <p>
-      <a href="{% url 'accounts:register' %}" class="cta-btn">Create an Account</a>
-      or
-      <a href="{% url 'accounts:login' %}" class="cta-btn">Login</a>
-      to start shopping!
-    </p>
-  </div>  
-  -->
-</section>
-{% endblock %}
-
-
-
-
-base.html
-
+#base.html
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -97,14 +38,8 @@ base.html
     {% if user.is_authenticated %}
         <a href="{% url 'products:product_list' %}">Products</a>
         <a href="{% url 'cart:cart_view' %}">Cart</a>
-        <a href="{% url 'orders:checkout' %}">Orders</a>
+        <a href="{% url 'orders:my_orders' %}">Orders</a>
         <a href="{% url 'accounts:profile' %}">Profile</a>
-
-        {% if user.is_staff %}
-            <a href="{% url 'ids:ids_dashboard' %}">IDS Dashboard</a>
-            <a href="{% url 'airs:airs_dashboard' %}">AIRS Dashboard</a>
-        {% endif %}
-
         <a href="{% url 'accounts:logout' %}">Logout</a>
     {% else %}
         <a href="{% url 'accounts:login' %}">Login</a>
@@ -223,8 +158,64 @@ base.html
 
 
  <!-- ================= JavaScript Files ================= -->
- <script src="{% static 'js/toggle_mode.js' %}"></script>
  <script src="{% static 'js/vuln_lab.js' %}"></script>
 
 </body>
 </html>
+
+
+
+
+#main.html
+{% extends "base.html" %}
+
+{% block title %}Welcome to MyShop{% endblock %}
+
+{%load static%}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="intro-section">
+  <h2>Welcome to MyShop</h2>
+  <p>We offer a wide range of high-quality products at unbeatable prices. 
+     From electronics to fashion, we’ve got something for everyone!</p>
+
+  <div class="promo-grid">
+    <div class="promo-item">
+      <h3>🔥 Latest Gadgets</h3>
+      <p>Stay ahead with the newest tech trends.</p>
+    </div>
+    <div class="promo-item">
+      <h3>💎 Premium Quality</h3>
+      <p>Carefully selected products you can trust.</p>
+    </div>
+    <div class="promo-item">
+      <h3>🚚 Fast Delivery</h3>
+      <p>Get your order quickly and safely.</p>
+    </div>
+  </div>
+
+  <section id="about" class="about-section">
+  <h2>About MyShop</h2>
+  <p>
+    MyShop is your trusted online destination for a wide range of high-quality products. From the latest electronics to trendy fashion and essential home goods, we carefully curate our collection to ensure unbeatable quality and value. Our mission is to provide a seamless shopping experience with fast delivery, secure transactions, and exceptional customer support. Whether you're upgrading your gadgets or refreshing your wardrobe, MyShop is here to help you find exactly what you need with confidence and convenience.
+  </p>
+</section>
+
+
+  <!-- Optional: Call to action 
+  <div class="cta">
+    <p>
+      <a href="{% url 'accounts:register' %}" class="cta-btn">Create an Account</a>
+      or
+      <a href="{% url 'accounts:login' %}" class="cta-btn">Login</a>
+      to start shopping!
+    </p>
+  </div>  
+  -->
+</section>
+{% endblock %}
+

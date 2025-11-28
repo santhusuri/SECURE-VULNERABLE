@@ -1,13 +1,19 @@
 {% extends "base.html" %}
 {% block title %}Vulnerable Checkout{% endblock %}
 {% load static %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/vuln_checkout.css' %}">
+<link rel="stylesheet" href="{% static 'css/alerts.css' %}">
 {% endblock %}
 
 {% block content %}
+{% include "includes/mode_banner.html" %}
+
 <h2>⚠ Vulnerable Checkout (Simulation)</h2>
-<p>This page intentionally skips validation. An attacker could change the total amount.</p>
+<p style="color:red; font-weight:bold;">
+    This checkout skips payment validation. An attacker could manipulate the total!
+</p>
 
 <table>
 {% for id, item in cart.items %}
@@ -19,10 +25,12 @@
 {% endfor %}
 </table>
 
+<p><strong>Real Total:</strong> ${{ total }}</p>
+
 <form method="POST">
     {% csrf_token %}
-    <label>Enter Amount to Pay: </label>
+    <label>Enter Amount to Pay (no checks!): </label>
     <input type="text" name="amount" value="{{ total }}">
-    <button type="submit">Pay Now</button>
+    <button type="submit">Pay Now (Insecure)</button>
 </form>
 {% endblock %}

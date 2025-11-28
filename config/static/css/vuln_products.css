@@ -1,0 +1,119 @@
+/* ==============================
+   Vulnerable Products Page
+   ============================== */
+
+/* Vulnerable Mode Banner */
+.vulnerable-alert {
+    background-color: #ffe5e5;
+    color: #b22222;
+    border: 1px solid #b22222;
+    padding: 1rem 1.4rem;
+    border-radius: 6px;
+    margin: 1rem 0 2rem 0;
+    text-align: center;
+    font-weight: bold;
+    width: 100%;          /* full width */
+    box-sizing: border-box;
+}
+
+
+/* Main container (sidebar + grid) */
+.container {
+    display: flex;
+    gap: 24px;
+    margin-top: 1rem;
+}
+
+/* Sidebar */
+.category-sidebar {
+    width: 200px;
+}
+
+.category-sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.category-sidebar li {
+    margin-bottom: 8px;
+}
+
+.category-sidebar a {
+    color: #b91c1c;
+    text-decoration: underline;
+}
+
+.category-sidebar a:hover {
+    color: #7f1d1d;
+}
+
+/* Product grid */
+.product-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    flex: 1;
+}
+
+.product-card {
+    width: 200px;
+    border: 1px solid #e6e6e6;
+    padding: 10px;
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    text-align: center;
+}
+
+.product-card img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.product-card h4 {
+    margin: 8px 0 4px 0;
+    font-size: 1rem;
+    color: #222;
+}
+
+.product-card p {
+    margin: 0 0 8px 0;
+    font-weight: bold;
+    color: #444;
+}
+
+/* View button */
+.product-card a {
+    display: inline-block;
+    background: #dc2626;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: background 0.2s ease;
+}
+
+.product-card a:hover {
+    background: #b91c1c;
+}
+
+/* Diagnostics block */
+.diagnostics {
+    margin: 20px auto;
+    padding: 12px;
+    background: #111;
+    color: #0f0;
+    font-family: monospace;
+    border-radius: 6px;
+    max-width: 90%;
+    overflow-x: auto;
+}
+
+.diagnostics h4 {
+    margin-bottom: 8px;
+    color: #ff4444;
+}

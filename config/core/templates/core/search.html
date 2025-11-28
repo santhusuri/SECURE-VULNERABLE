@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Search (Ping Command){% endblock %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/search.css' %}">
+<style>
+.vulnerable-alert {
+    background-color: #ffe5e5;
+    color: #b22222;
+    border: 1px solid #b22222;
+    padding: 0.9rem 1.4rem;
+    border-radius: 6px;
+    margin: 1rem auto 2rem auto;
+    text-align: center;
+    font-weight: bold;
+}
+.secure-alert {
+    background-color: #e5ffe5;
+    color: #225522;
+    border: 1px solid #225522;
+    padding: 0.9rem 1.4rem;
+    border-radius: 6px;
+    margin: 1rem auto 2rem auto;
+    text-align: center;
+    font-weight: bold;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<h2>🔍 Search (Ping Host)</h2>
+
+{% if mode == "vulnerable" %}
+<div class="vulnerable-alert">
+    ⚠️ Running in <strong>VULNERABLE MODE</strong> — user input is directly executed as a shell command!
+</div>
+{% else %}
+<div class="secure-alert">
+    ✔ Running in <strong>SECURE MODE</strong> — input is validated before execution.
+</div>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+    <label for="query">Host/IP to Ping:</label>
+    <input type="text" name="query" id="query" placeholder="e.g. 8.8.8.8">
+    <button type="submit">Run</button>
+</form>
+
+{% if search_result %}
+<hr>
+<h3>Output:</h3>
+<pre>{{ search_result }}</pre>
+{% endif %}
+{% endblock %}

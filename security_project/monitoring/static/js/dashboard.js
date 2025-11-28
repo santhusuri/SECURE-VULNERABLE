@@ -1,7 +1,7 @@
-let lastSeenId = 0;
 let soundMuted = false;
 let sirenPlaying = false; // track if siren is looping
 
+// === Toast Notifications ===
 function showToast(message) {
     const container = document.getElementById("toast-container");
     const toast = document.createElement("div");
@@ -11,6 +11,7 @@ function showToast(message) {
     setTimeout(() => toast.remove(), 5000);
 }
 
+// === Sound Control ===
 function playSirenLoop(loop = false) {
     const sound = document.getElementById("alert-sound");
     if (!soundMuted) {
@@ -29,12 +30,18 @@ function stopSiren() {
     sirenPlaying = false;
 }
 
+// === Row Highlighting ===
 function highlightRow(row, severity) {
-    let color = severity === "high" ? "#ff4c4c" : severity === "medium" ? "#ffc107" : "#28a745";
+    let color =
+        severity === "critical" ? "#b91c1c" :
+        severity === "high" ? "#ef4444" :
+        severity === "medium" ? "#facc15" :
+        "#22c55e"; // low/others
     row.style.backgroundColor = color;
     setTimeout(() => { row.style.backgroundColor = ""; }, 3000);
 }
 
+// === Row Animation ===
 function animateRow(row) {
     row.style.opacity = 0;
     row.style.transform = "translateX(100%)";
@@ -45,61 +52,58 @@ function animateRow(row) {
     }, 10);
 }
 
-function fetchIncidents() {
-    fetch(`/api/incidents/?last_id=${lastSeenId}`)
-        .then(res => res.json())
-        .then(data => {
-            const tbody = document.querySelector("table tbody");
+// === Add new incident row ===
+function addIncident(incident) {
+    const tableBody = document.getElementById("incident-table-body");
+    const lastUpdated = document.getElementById("last-updated");
 
-            data.forEach(incident => {
-                // update last seen ID
-                lastSeenId = Math.max(lastSeenId, incident.id);
+    const severity = (incident.severity || "low").toLowerCase();
 
-                const severity = (incident.severity || "low").toLowerCase();
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${incident.id}</td>
+      <td>${incident.attack_type}</td>
+      <td class="event-data">${incident.event_data}</td>
+      <td>${incident.ip_address}</td>
+      <td>${incident.action_taken}</td>
+      <td>${incident.timestamp}</td>
+      <td><span class="badge severity-${severity}">${incident.severity}</span></td>
+    `;
 
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${incident.id}</td>
-                    <td>${incident.attack_type}</td>
-                    <td>${incident.event_data}</td>
-                    <td>${incident.ip_address}</td>
-                    <td>${incident.action_taken}</td>
-                    <td>${incident.timestamp}</td>
-                    <td><span class="severity ${severity}">${incident.severity}</span></td>
-                `;
-                tbody.prepend(row);
+    tableBody.prepend(row);
 
-                animateRow(row);
-                highlightRow(row, severity);
+    animateRow(row);
+    highlightRow(row, severity);
 
-                if (severity === "high") {
-                    showToast(`🚨 High Alert: ${incident.attack_type} from ${incident.ip_address}`);
-                    playSirenLoop(true); // continuous loop
-                } else if (severity === "medium") {
-                    showToast(`⚠️ Medium Alert: ${incident.attack_type}`);
-                    playSirenLoop(false); // play once
-                } else {
-                    showToast(`ℹ️ Low Alert: ${incident.attack_type}`);
-                    playSirenLoop(false); // play once
-                }
-            });
-        });
+    // Toast + sound per severity
+    if (severity === "critical" || severity === "high") {
+        showToast(`🚨 ${incident.severity} Alert: ${incident.attack_type} from ${incident.ip_address}`);
+        playSirenLoop(true); // continuous siren
+    } else if (severity === "medium") {
+        showToast(`⚠️ Medium Alert: ${incident.attack_type}`);
+        playSirenLoop(false); // play once
+    } else {
+        showToast(`ℹ️ Low Alert: ${incident.attack_type}`);
+        playSirenLoop(false);
+    }
+
+    if (lastUpdated) {
+        lastUpdated.textContent = "Last updated: " + new Date().toLocaleTimeString();
+    }
 }
 
-// 🔊 Handle mute/unmute toggle
-document.addEventListener("DOMContentLoaded", () => {
+// === WebSocket Connection ===
+document.addEventListener("DOMContentLoaded", function () {
     const muteBtn = document.getElementById("mute-btn");
 
+    // 🔊 Handle mute/unmute toggle
     muteBtn.addEventListener("click", () => {
         soundMuted = !soundMuted;
         muteBtn.textContent = soundMuted ? "🔇 Sound Off" : "🔊 Sound On";
-
-        if (soundMuted) {
-            stopSiren();
-        }
+        if (soundMuted) stopSiren();
     });
 
-    // Unlock audio on first user click (browser autoplay fix)
+    // 🔓 Unlock audio on first click (browser autoplay fix)
     document.addEventListener("click", function initAudio() {
         const audio = document.getElementById("alert-sound");
         audio.play().then(() => {
@@ -109,6 +113,16 @@ document.addEventListener("DOMContentLoaded", () => {
         document.removeEventListener("click", initAudio);
     });
 
-    fetchIncidents();
-    setInterval(fetchIncidents, 5000);
+    // Connect WebSocket
+    const socket = new WebSocket("ws://" + window.location.host + "/ws/incidents/");
+
+    socket.onmessage = function (e) {
+        const incident = JSON.parse(e.data);
+        addIncident(incident);
+    };
+
+    socket.onclose = function () {
+        console.warn("WebSocket closed, attempting reconnect in 5s...");
+        setTimeout(() => location.reload(), 5000);
+    };
 });

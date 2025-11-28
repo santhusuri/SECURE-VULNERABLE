@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'monitoring',
+    "channels",
     'rest_framework',
 ]
 
@@ -130,3 +131,16 @@ SURICATA_EVE_PATH = "/var/log/suricata/eve.json"
 # Optional Project A session revoke endpoint (configure to your main app)
 PROJECT_A_REVOKE_URL = "http://127.0.0.1:8000/api/revoke-session/"
 PROJECT_A_API_KEY = "replace-with-a-secret-if-needed"
+
+
+
+
+# Channels setup
+ASGI_APPLICATION = "security_project.asgi.application"
+
+# In-memory channel layer (simple, good for dev)
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}

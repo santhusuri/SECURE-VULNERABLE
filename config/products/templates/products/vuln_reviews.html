@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}⚠ Product Reviews (Vulnerable){% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/review.css' %}">
+<style>
+.mode-vulnerable {
+    background-color: #ffe5e5;
+    color: #b22222;
+    border: 2px solid #b22222;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+    font-weight: bold;
+    text-align: center;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reviews-container">
+    <h1>⚠ All Product Reviews (Vulnerable)</h1>
+
+    <div class="mode-vulnerable">
+        ⚠ VULNERABLE MODE: Comments are rendered without sanitization.  
+        Malicious JavaScript (XSS) may execute here.
+    </div>
+
+    <table class="reviews-table">
+        <tr>
+            <th>User</th>
+            <th>Product</th>
+            <th>Rating</th>
+            <th>Comment</th>
+            <th>Date</th>
+        </tr>
+        {% for review in reviews %}
+        <tr>
+            <td><strong>{{ review.user.username }}</strong></td>
+            <td>{{ review.product.name }}</td>
+            <td><span class="rating">{{ review.rating }}/5</span></td>
+            <td>{{ review.comment|safe }}</td> <!-- ❌ Unsafe: allows XSS -->
+            <td>{{ review.created_at|date:"Y-m-d H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5">No reviews available.</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <div class="reviews-footer">
+        🔓 Vulnerable review page — possible stored/reflected XSS attacks.
+    </div>
+</div>
+{% endblock %}

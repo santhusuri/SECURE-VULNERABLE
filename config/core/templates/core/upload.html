@@ -1,17 +1,59 @@
 {% extends "base.html" %}
-
-{% block title %}File Upload Demo{% endblock %}
+{% block title %}File Upload{% endblock %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/upload.css' %}">
+<style>
+.vulnerable-alert {
+    background-color: #ffe5e5;
+    color: #b22222;
+    border: 1px solid #b22222;
+    padding: 0.9rem 1.4rem;
+    border-radius: 6px;
+    margin: 1rem auto 2rem auto;
+    text-align: center;
+    font-weight: bold;
+}
+.secure-alert {
+    background-color: #e5ffe5;
+    color: #225522;
+    border: 1px solid #225522;
+    padding: 0.9rem 1.4rem;
+    border-radius: 6px;
+    margin: 1rem auto 2rem auto;
+    text-align: center;
+    font-weight: bold;
+}
+</style>
+{% endblock %}
 
 {% block content %}
-  <h2>File Upload {% if secure %}(Secure Mode){% else %}(Vulnerable Mode){% endif %}</h2>
-  <form method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-      <input type="file" name="file" required>
-      <button type="submit">Upload</button>
-  </form>
+<h2>📂 File Upload</h2>
 
-  {% if result %}
-      <h3>Result:</h3>
-      <pre>{{ result }}</pre>
-  {% endif %}
+{% if mode == "vulnerable" %}
+<div class="vulnerable-alert">
+    ⚠️ Running in <strong>VULNERABLE MODE</strong> — filename is not sanitized, dangerous files can be uploaded!
+</div>
+{% else %}
+<div class="secure-alert">
+    ✔ Running in <strong>SECURE MODE</strong> — only safe file types & small files are allowed.
+</div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <label for="file">Choose file:</label>
+    <input type="file" name="file" id="file" required><br><br>
+
+    <label for="filename">Save as (optional):</label>
+    <input type="text" name="filename" id="filename" placeholder="custom_filename.ext">
+
+    <button type="submit">Upload</button>
+</form>
+
+{% if upload_result %}
+<hr>
+<h3>System Output:</h3>
+<pre>{{ upload_result }}</pre>
+{% endif %}
 {% endblock %}

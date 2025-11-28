@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Shipments{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/shipment.css' %}">
+{% endblock %}
+
+{% block content %}
+<h2>My Shipments</h2>
+
+{% if shipments %}
+<table class="shipments-table">
+  <thead>
+    <tr>
+      <th>Order</th>
+      <th>Tracking</th>
+      <th>Carrier</th>
+      <th>Status</th>
+      <th>Estimated Delivery</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for shipment in shipments %}
+    <tr>
+      <td>#{{ shipment.order.id }}</td>
+      <td>{{ shipment.masked_tracking_number }}</td>
+      <td>{{ shipment.carrier }}</td>
+      <td>{{ shipment.status }}</td>
+      <td>{{ shipment.estimated_delivery }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No shipments found.</p>
+{% endif %}
+{% endblock %}
