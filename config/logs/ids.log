@@ -525,3 +525,5 @@
 2025-11-28 19:32:46 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/toggle_mode/: {}
 2025-11-28 19:32:55 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/login/: {'csrfmiddlewaretoken': '*****', 'username': 'example', 'password': '*****'}
 2025-11-28 19:33:04 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /orders/: {'csrfmiddlewaretoken': '*****', 'amount': '699.99'}
+2025-11-28 19:40:01 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/toggle_mode/: {}
+2025-11-28 19:40:50 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/toggle_mode/: {}

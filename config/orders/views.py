@@ -18,11 +18,17 @@ from .utils import generate_invoice
 stripe.api_key = settings.STRIPE_SECRET_KEY
 logger = logging.getLogger(__name__)
 
+
+def get_mode(request):
+    return request.session.get("sim_mode", "secure")
+
+
 # -----------------------
-# My Orders
+# My Orders (secure only)
 # -----------------------
 @login_required
 def my_orders(request):
+    # Always secure: users should only see their own list
     orders = (
         Order.objects.filter(user=request.user)
         .prefetch_related(
@@ -38,15 +44,7 @@ def my_orders(request):
 # Checkout (secure vs vulnerable)
 # -----------------------
 def checkout(request):
-    """
-    Handles checkout flow depending on mode.
-    - Secure mode:
-        Creates a Stripe PaymentIntent.
-        Order is created only AFTER successful payment.
-    - Vulnerable mode:
-        Accepts user input amount and immediately creates an order.
-    """
-    mode = request.session.get("sim_mode", "secure")
+    mode = get_mode(request)
     cart = request.session.get("cart", {})
     total = sum(item["price"] * item["qty"] for item in cart.values())
 
@@ -55,7 +53,7 @@ def checkout(request):
         return redirect("cart:cart_view")
 
     if mode == "secure":
-        # ✅ Save cart snapshot in session for later webhook retrieval
+        # SECURE: Stripe + order only after verified payment
         request.session["pending_cart"] = cart
         intent = stripe.PaymentIntent.create(
             amount=int(total * 100),
@@ -72,8 +70,8 @@ def checkout(request):
                 "STRIPE_PUBLIC_KEY": settings.STRIPE_PUBLIC_KEY,
             },
         )
-
-    else:  # vulnerable mode
+    else:
+        # VULNERABLE: accepts arbitrary amount, instant order
         if request.method == "POST":
             try:
                 entered_amount = float(request.POST.get("amount", total))
@@ -84,7 +82,7 @@ def checkout(request):
             order = create_order_with_items(request, request.user, cart, entered_amount)
             messages.warning(
                 request,
-                f"(Vulnerable) Payment accepted for ${entered_amount} without verification!",
+                f"(VULNERABLE) Payment accepted for ${entered_amount} without verification!",
             )
             logger.warning(f"Vulnerable checkout used by user={request.user} amount={entered_amount}")
             request.session["cart"] = {}
@@ -94,7 +92,7 @@ def checkout(request):
 
 
 # -----------------------
-# Stripe Webhook
+# Stripe Webhook (secure)
 # -----------------------
 @csrf_exempt
 def stripe_webhook(request):
@@ -109,7 +107,7 @@ def stripe_webhook(request):
 
     if event["type"] == "payment_intent.succeeded":
         user_id = event["data"]["object"]["metadata"]["user_id"]
-        cart = request.session.get("pending_cart", {})  # ✅ Retrieve cart snapshot
+        cart = request.session.get("pending_cart", {})
         total = sum(item["price"] * item["qty"] for item in cart.values())
         user = None
         if user_id != "guest":
@@ -122,25 +120,31 @@ def stripe_webhook(request):
 
         if cart:
             create_order_with_items(request, user, cart, total)
-            request.session["pending_cart"] = {}  # clear after success
+            request.session["pending_cart"] = {}
 
     return JsonResponse({"status": "success"})
 
 
 # -----------------------
-# Order Success
+# Order Success (IDOR lab)
 # -----------------------
-from django.shortcuts import get_object_or_404, render
-
 def order_success(request, order_id):
-    order = get_object_or_404(Order, id=order_id)
-    return render(request, "orders/order_success.html", {
-        "order": order,
-    })
+    mode = get_mode(request)
+
+    if mode == "secure":
+        # SECURE: only owner can see their order success page
+        if not request.user.is_authenticated:
+            return redirect("accounts:login")
+        order = get_object_or_404(Order, id=order_id, user=request.user)
+    else:
+        # VULNERABLE: IDOR – no user check, any authenticated user can view any order id
+        order = get_object_or_404(Order, id=order_id)
+
+    return render(request, "orders/order_success.html", {"order": order})
 
 
 # -----------------------
-# Create Order (AJAX)
+# Create Order (AJAX, secure)
 # -----------------------
 @csrf_protect
 @require_POST
@@ -152,7 +156,6 @@ def create_order(request):
         total = sum(item["price"] * item["qty"] for item in cart.values())
         user = request.user if request.user.is_authenticated else None
 
-        # ✅ Verify payment intent before creating order
         intent = stripe.PaymentIntent.retrieve(payment_intent_id)
         if intent.status != "succeeded":
             return JsonResponse({"error": "Payment not verified"}, status=400)
@@ -166,16 +169,15 @@ def create_order(request):
 
 
 # -----------------------
-# Helper: Create Order + Items (shipment auto-created by signal)
+# Helper: Create Order + Items
 # -----------------------
 def create_order_with_items(request, user, cart, total):
-    mode = request.session.get("sim_mode", "secure")
+    mode = get_mode(request)
     order = Order.objects.create(
         user=user if user and hasattr(user, "is_authenticated") and user.is_authenticated else None,
         total=total,
-        mode=mode,  # ✅ save mode for auditing
+        mode=mode,
     )
-
     for product_id, item in cart.items():
         OrderItem.objects.create(
             order=order,
@@ -183,18 +185,25 @@ def create_order_with_items(request, user, cart, total):
             quantity=item["qty"],
             price=item["price"],
         )
-
     logger.info(f"Order created id={order.id} mode={mode} total={total} user={user}")
     return order
 
 
 # -----------------------
-# Download Invoice
+# Download Invoice (IDOR lab)
 # -----------------------
 @login_required
 def download_invoice(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
+    mode = get_mode(request)
+
+    if mode == "secure":
+        # SECURE: enforce ownership
+        order = get_object_or_404(Order, id=order_id, user=request.user)
+    else:
+        # VULNERABLE: IDOR – any logged-in user can download any invoice id
+        order = get_object_or_404(Order, id=order_id)
+
     response = generate_invoice(order)
     filename = f"invoice_order_{order.id}.pdf"
-    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    response["Content-Disposition"] = f'attachment; filename=\"{filename}\"'
     return response
