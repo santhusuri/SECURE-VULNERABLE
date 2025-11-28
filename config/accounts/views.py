@@ -14,6 +14,9 @@ from django.db import connection
 from django.http import JsonResponse, HttpResponseForbidden
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+from django.utils import timezone
+from datetime import timedelta
+
 
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
@@ -76,24 +79,71 @@ def register_view(request):
 
 
 # -------------------- Login --------------------
+# -------------------- Login --------------------
 def login_view(request):
     user_ip = get_client_ip(request)
     mode = "vulnerable" if is_vulnerable_mode(request) else "secure"
 
     if mode == "vulnerable":
         attempted_username = None
+
+        # ---- simple rate limit: 5 attempts / minute per session ----
+        now = timezone.now()
+        rl = request.session.get("vuln_login_rl", {"count": 0, "reset_at": None})
+        reset_at = rl.get("reset_at")
+
+        if reset_at:
+            # reset_at stored as ISO string -> convert back to datetime
+            if isinstance(reset_at, str):
+                reset_at = timezone.datetime.fromisoformat(reset_at)
+                if timezone.is_naive(reset_at):
+                    reset_at = timezone.make_aware(reset_at)
+
+        # new window if no reset time or window expired
+        if not reset_at or now >= reset_at:
+            rl = {
+                "count": 0,
+                "reset_at": (now + timedelta(minutes=1)).isoformat()
+            }
+
+        if rl["count"] >= 5:
+            messages.error(
+                request,
+                "Too many login attempts. Please wait a minute and try again."
+            )
+            request.session["vuln_login_rl"] = rl
+            request.session.modified = True
+            return render(
+                request,
+                "accounts/vuln_login.html",
+                {"attempted_username": None},
+            )
+        # ------------------------------------------------------------
+
         if request.method == "POST":
             username = request.POST.get("username", "")
             password = request.POST.get("password", "")
             attempted_username = username
 
+            # consume one attempt
+            rl["count"] += 1
+            request.session["vuln_login_rl"] = rl
+            request.session.modified = True
+
             send_security_event(f"VULN LOGIN ATTEMPT: username='{username}'", user_ip)
 
             if not getattr(settings, "VULNERABLE_LABS", {}).get("raw_sql_injection", True):
                 messages.error(request, "Vulnerable SQL lab disabled.")
-                return render(request, "accounts/vuln_login.html", {"attempted_username": attempted_username})
+                return render(
+                    request,
+                    "accounts/vuln_login.html",
+                    {"attempted_username": attempted_username},
+                )
 
-            query = f"SELECT id FROM accounts_vulnuser WHERE username = '{username}' AND password = '{password}'"
+            query = (
+                "SELECT id FROM accounts_vulnuser "
+                f"WHERE username = '{username}' AND password = '{password}'"
+            )
             with connection.cursor() as cursor:
                 try:
                     cursor.execute(query)  # vulnerable to SQLi
@@ -113,15 +163,22 @@ def login_view(request):
             else:
                 messages.error(request, "Invalid credentials (vulnerable login).")
 
-        return render(request, "accounts/vuln_login.html", {"attempted_username": attempted_username})
+        return render(
+            request,
+            "accounts/vuln_login.html",
+            {"attempted_username": attempted_username},
+        )
 
-    # Secure flow
+    # ---------- Secure flow (unchanged) ----------
     if request.method == "POST":
         form = LoginForm(data=request.POST)
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            send_security_event(f"Secure Login: username='{form.cleaned_data.get('username')}'", user_ip)
+            send_security_event(
+                f"Secure Login: username='{form.cleaned_data.get('username')}'",
+                user_ip,
+            )
             return redirect("accounts:profile")
         else:
             messages.error(request, "Invalid username or password.")

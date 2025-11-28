@@ -386,3 +386,136 @@
 2025-11-28 18:31:35 | User: system | [LOCAL] xss detected in vulnerable mode: POST to /accounts/login/: {'csrfmiddlewaretoken': '*****', 'username': "<script>alert('hacked')</script>", 'password': '*****'}
 2025-11-28 18:33:38 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/login/: {'csrfmiddlewaretoken': '*****', 'username': "<script>alert('XSS from username')</script>", 'password': '*****'}
 2025-11-28 18:33:38 | User: system | [LOCAL] xss detected in vulnerable mode: POST to /accounts/login/: {'csrfmiddlewaretoken': '*****', 'username': "<script>alert('XSS from username')</script>", 'password': '*****'}
+2025-11-28 19:08:35 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/login/: {'username': 'admin', 'password': '*****'}
+2025-11-28 19:08:35 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/login/: {'username': 'admin', 'password': '*****'}
+2025-11-28 19:08:35 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/login/: {'username': 'admin', 'password': '*****'}
+2025-11-28 19:08:35 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/login/: {'username': 'admin', 'password': '*****'}
+2025-11-28 19:08:35 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/login/: {'username': 'admin', 'password': '*****'}
+2025-11-28 19:09:01 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/login/: {'csrfmiddlewaretoken': '*****', 'username': 'admin', 'password': '*****'}
+2025-11-28 19:09:22 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/register/: {'csrfmiddlewaretoken': '*****', 'username': 'admin', 'email': 'admin@admin', 'password': '*****'}
+2025-11-28 19:09:26 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/register/: {'csrfmiddlewaretoken': '*****', 'username': 'admin', 'email': 'admin@admin', 'password': '*****'}
+2025-11-28 19:09:32 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/register/: {'csrfmiddlewaretoken': '*****', 'username': 'admin', 'email': 'admin@admin', 'password': '*****'}
+2025-11-28 19:09:42 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/vuln_login/: {'csrfmiddlewaretoken': '*****', 'username': 'admin', 'password': '*****'}
+2025-11-28 19:10:25 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/register/: {'csrfmiddlewaretoken': '*****', 'username': 'admin', 'email': 'admin@admin', 'password': '*****'}
+2025-11-28 19:10:55 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/register/: {'csrfmiddlewaretoken': '*****', 'username': 'example', 'email': 'admin@admin', 'password': '*****'}
+2025-11-28 19:10:59 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/register/: {'csrfmiddlewaretoken': '*****', 'username': 'example', 'email': 'admin@admin', 'password': '*****'}
+2025-11-28 19:11:10 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/register/: {'csrfmiddlewaretoken': '*****', 'username': 'example', 'email': 'admin@gmail.com', 'password': '*****'}
+2025-11-28 19:11:23 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/vuln_login/: {'csrfmiddlewaretoken': '*****', 'username': 'example', 'password': '*****'}
+2025-11-28 19:12:15 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/toggle_mode/: {}
+2025-11-28 19:12:21 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/login/: {'username': 'example', 'password': '*****'}
+2025-11-28 19:12:21 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/login/: {'username': 'example', 'password': '*****'}
+2025-11-28 19:12:21 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/login/: {'username': 'example', 'password': '*****'}
+2025-11-28 19:12:21 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/login/: {'username': 'example', 'password': '*****'}
+2025-11-28 19:12:21 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/login/: {'username': 'example', 'password': '*****'}
+2025-11-28 19:13:31 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/toggle_mode/: {}
+2025-11-28 19:13:32 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/login/: {'username': "' OR '1'='1' --", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:32 | User: system | [LOCAL] sql_injection detected in vulnerable mode: POST to /accounts/login/: {'username': "' OR '1'='1' --", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:33 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /products/vuln_product_search/: {'username': "<script>alert('XSS')</script>", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:33 | User: system | [LOCAL] xss detected in vulnerable mode: POST to /products/vuln_product_search/: {'username': "<script>alert('XSS')</script>", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:34 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/login/: {'username': 'failed login', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:34 | User: system | [LOCAL] bruteforce detected in vulnerable mode: POST to /accounts/login/: {'username': 'failed login', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:35 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /orders/: {'username': '; ls', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:35 | User: system | [LOCAL] command_injection detected in vulnerable mode: POST to /orders/: {'username': '; ls', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:36 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /products/vuln_product_detail/: {'username': 'file.php', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:37 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /shipping/details/1/: {'username': '../etc/passwd', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:37 | User: system | [LOCAL] directory_traversal detected in vulnerable mode: POST to /shipping/details/1/: {'username': '../etc/passwd', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:38 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/profile/: {'username': 'PHPSESSID=12345', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:38 | User: system | [LOCAL] session_hijacking detected in vulnerable mode: POST to /accounts/profile/: {'username': 'PHPSESSID=12345', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:39 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /orders/: {'username': 'csrfmiddlewaretoken=fake_token', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:39 | User: system | [LOCAL] csrf_bypass detected in vulnerable mode: POST to /orders/: {'username': 'csrfmiddlewaretoken=fake_token', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:40 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/toggle_mode/: {}
+2025-11-28 19:13:41 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/login/: {'username': "' OR '1'='1' --", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:41 | User: system | [LOCAL] sql_injection detected in secure mode: POST to /accounts/login/: {'username': "' OR '1'='1' --", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:42 | User: 127.0.0.1 | [SECURE MODE] POST to /products/vuln_product_search/: {'username': "<script>alert('XSS')</script>", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:42 | User: system | [LOCAL] xss detected in secure mode: POST to /products/vuln_product_search/: {'username': "<script>alert('XSS')</script>", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:43 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/login/: {'username': 'failed login', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:43 | User: system | [LOCAL] bruteforce detected in secure mode: POST to /accounts/login/: {'username': 'failed login', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:44 | User: 127.0.0.1 | [SECURE MODE] POST to /orders/: {'username': '; ls', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:44 | User: system | [LOCAL] command_injection detected in secure mode: POST to /orders/: {'username': '; ls', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:45 | User: 127.0.0.1 | [SECURE MODE] POST to /products/vuln_product_detail/: {'username': 'file.php', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:47 | User: 127.0.0.1 | [SECURE MODE] POST to /shipping/details/1/: {'username': '../etc/passwd', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:47 | User: system | [LOCAL] directory_traversal detected in secure mode: POST to /shipping/details/1/: {'username': '../etc/passwd', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:48 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/profile/: {'username': 'PHPSESSID=12345', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:48 | User: system | [LOCAL] session_hijacking detected in secure mode: POST to /accounts/profile/: {'username': 'PHPSESSID=12345', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:49 | User: 127.0.0.1 | [SECURE MODE] POST to /orders/: {'username': 'csrfmiddlewaretoken=fake_token', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:13:49 | User: system | [LOCAL] csrf_bypass detected in secure mode: POST to /orders/: {'username': 'csrfmiddlewaretoken=fake_token', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:14:00 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/toggle_mode/: {}
+2025-11-28 19:14:01 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/login/: {'username': "' OR '1'='1' --", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:14:01 | User: system | [LOCAL] sql_injection detected in vulnerable mode: POST to /accounts/login/: {'username': "' OR '1'='1' --", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:14:02 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /products/vuln_product_search/: {'username': "<script>alert('XSS')</script>", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:14:02 | User: system | [LOCAL] xss detected in vulnerable mode: POST to /products/vuln_product_search/: {'username': "<script>alert('XSS')</script>", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:14:03 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/login/: {'username': 'failed login', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:14:03 | User: system | [LOCAL] bruteforce detected in vulnerable mode: POST to /accounts/login/: {'username': 'failed login', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:14:04 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /orders/: {'username': '; ls', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:14:04 | User: system | [LOCAL] command_injection detected in vulnerable mode: POST to /orders/: {'username': '; ls', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:14:05 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /products/vuln_product_detail/: {'username': 'file.php', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:14:10 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /orders/: {'username': 'csrfmiddlewaretoken=fake_token', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:14:10 | User: system | [LOCAL] csrf_bypass detected in vulnerable mode: POST to /orders/: {'username': 'csrfmiddlewaretoken=fake_token', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:14:11 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/toggle_mode/: {}
+2025-11-28 19:14:12 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/login/: {'username': "' OR '1'='1' --", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:14:12 | User: system | [LOCAL] sql_injection detected in secure mode: POST to /accounts/login/: {'username': "' OR '1'='1' --", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:14:13 | User: 127.0.0.1 | [SECURE MODE] POST to /products/vuln_product_search/: {'username': "<script>alert('XSS')</script>", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:14:13 | User: system | [LOCAL] xss detected in secure mode: POST to /products/vuln_product_search/: {'username': "<script>alert('XSS')</script>", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:14:14 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/login/: {'username': 'failed login', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:14:14 | User: system | [LOCAL] bruteforce detected in secure mode: POST to /accounts/login/: {'username': 'failed login', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:14:15 | User: 127.0.0.1 | [SECURE MODE] POST to /orders/: {'username': '; ls', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:14:15 | User: system | [LOCAL] command_injection detected in secure mode: POST to /orders/: {'username': '; ls', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:14:16 | User: 127.0.0.1 | [SECURE MODE] POST to /products/vuln_product_detail/: {'username': 'file.php', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:14:19 | User: 127.0.0.1 | [SECURE MODE] POST to /orders/: {'username': 'csrfmiddlewaretoken=fake_token', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:14:19 | User: system | [LOCAL] csrf_bypass detected in secure mode: POST to /orders/: {'username': 'csrfmiddlewaretoken=fake_token', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:01 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/toggle_mode/: {}
+2025-11-28 19:15:02 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/login/: {'username': "' OR '1'='1' --", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:02 | User: system | [LOCAL] sql_injection detected in vulnerable mode: POST to /accounts/login/: {'username': "' OR '1'='1' --", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:03 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /products/vuln_product_search/: {'username': "<script>alert('XSS')</script>", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:03 | User: system | [LOCAL] xss detected in vulnerable mode: POST to /products/vuln_product_search/: {'username': "<script>alert('XSS')</script>", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:04 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/login/: {'username': 'failed login', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:04 | User: system | [LOCAL] bruteforce detected in vulnerable mode: POST to /accounts/login/: {'username': 'failed login', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:05 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /orders/: {'username': '; ls', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:05 | User: system | [LOCAL] command_injection detected in vulnerable mode: POST to /orders/: {'username': '; ls', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:06 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /products/vuln_product_detail/: {'username': 'file.php', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:09 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /orders/: {'username': 'csrfmiddlewaretoken=fake_token', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:09 | User: system | [LOCAL] csrf_bypass detected in vulnerable mode: POST to /orders/: {'username': 'csrfmiddlewaretoken=fake_token', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:10 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/toggle_mode/: {}
+2025-11-28 19:15:11 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/login/: {'username': "' OR '1'='1' --", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:11 | User: system | [LOCAL] sql_injection detected in secure mode: POST to /accounts/login/: {'username': "' OR '1'='1' --", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:12 | User: 127.0.0.1 | [SECURE MODE] POST to /products/vuln_product_search/: {'username': "<script>alert('XSS')</script>", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:12 | User: system | [LOCAL] xss detected in secure mode: POST to /products/vuln_product_search/: {'username': "<script>alert('XSS')</script>", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:13 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/login/: {'username': 'failed login', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:13 | User: system | [LOCAL] bruteforce detected in secure mode: POST to /accounts/login/: {'username': 'failed login', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:14 | User: 127.0.0.1 | [SECURE MODE] POST to /orders/: {'username': '; ls', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:14 | User: system | [LOCAL] command_injection detected in secure mode: POST to /orders/: {'username': '; ls', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:15 | User: 127.0.0.1 | [SECURE MODE] POST to /products/vuln_product_detail/: {'username': 'file.php', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:18 | User: 127.0.0.1 | [SECURE MODE] POST to /orders/: {'username': 'csrfmiddlewaretoken=fake_token', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:18 | User: system | [LOCAL] csrf_bypass detected in secure mode: POST to /orders/: {'username': 'csrfmiddlewaretoken=fake_token', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:45 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/toggle_mode/: {}
+2025-11-28 19:15:46 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/login/: {'username': "' OR '1'='1' --", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:46 | User: system | [LOCAL] sql_injection detected in vulnerable mode: POST to /accounts/login/: {'username': "' OR '1'='1' --", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:47 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /products/vuln_product_search/: {'username': "<script>alert('XSS')</script>", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:47 | User: system | [LOCAL] xss detected in vulnerable mode: POST to /products/vuln_product_search/: {'username': "<script>alert('XSS')</script>", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:48 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/login/: {'username': 'failed login', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:48 | User: system | [LOCAL] bruteforce detected in vulnerable mode: POST to /accounts/login/: {'username': 'failed login', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:49 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /orders/: {'username': '; ls', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:49 | User: system | [LOCAL] command_injection detected in vulnerable mode: POST to /orders/: {'username': '; ls', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:50 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /products/vuln_product_detail/: {'username': 'file.php', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:51 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /shipping/details/1/: {'username': '../etc/passwd', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:51 | User: system | [LOCAL] directory_traversal detected in vulnerable mode: POST to /shipping/details/1/: {'username': '../etc/passwd', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:52 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/profile/: {'username': 'PHPSESSID=12345', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:52 | User: system | [LOCAL] session_hijacking detected in vulnerable mode: POST to /accounts/profile/: {'username': 'PHPSESSID=12345', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:53 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /orders/: {'username': 'csrfmiddlewaretoken=fake_token', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:53 | User: system | [LOCAL] csrf_bypass detected in vulnerable mode: POST to /orders/: {'username': 'csrfmiddlewaretoken=fake_token', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:54 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/toggle_mode/: {}
+2025-11-28 19:15:55 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/login/: {'username': "' OR '1'='1' --", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:56 | User: system | [LOCAL] sql_injection detected in secure mode: POST to /accounts/login/: {'username': "' OR '1'='1' --", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:57 | User: 127.0.0.1 | [SECURE MODE] POST to /products/vuln_product_search/: {'username': "<script>alert('XSS')</script>", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:57 | User: system | [LOCAL] xss detected in secure mode: POST to /products/vuln_product_search/: {'username': "<script>alert('XSS')</script>", 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:58 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/login/: {'username': 'failed login', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:58 | User: system | [LOCAL] bruteforce detected in secure mode: POST to /accounts/login/: {'username': 'failed login', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:59 | User: 127.0.0.1 | [SECURE MODE] POST to /orders/: {'username': '; ls', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:15:59 | User: system | [LOCAL] command_injection detected in secure mode: POST to /orders/: {'username': '; ls', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:16:00 | User: 127.0.0.1 | [SECURE MODE] POST to /products/vuln_product_detail/: {'username': 'file.php', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:16:01 | User: 127.0.0.1 | [SECURE MODE] POST to /shipping/details/1/: {'username': '../etc/passwd', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:16:01 | User: system | [LOCAL] directory_traversal detected in secure mode: POST to /shipping/details/1/: {'username': '../etc/passwd', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:16:02 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/profile/: {'username': 'PHPSESSID=12345', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:16:02 | User: system | [LOCAL] session_hijacking detected in secure mode: POST to /accounts/profile/: {'username': 'PHPSESSID=12345', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:16:03 | User: 127.0.0.1 | [SECURE MODE] POST to /orders/: {'username': 'csrfmiddlewaretoken=fake_token', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:16:03 | User: system | [LOCAL] csrf_bypass detected in secure mode: POST to /orders/: {'username': 'csrfmiddlewaretoken=fake_token', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
