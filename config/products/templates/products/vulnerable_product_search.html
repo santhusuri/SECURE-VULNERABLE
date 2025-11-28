@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Vulnerable Search (Lab){% endblock %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/search_results.css' %}">
+<link rel="stylesheet" href="{% static 'css/alerts.css' %}">
+<link rel="stylesheet" href="{% static 'css/vuln_product_search.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include "includes/mode_banner.html" %}
+
+<div class="vuln-warning">
+  ⚠ VULNERABLE MODE: User input is executed and interpolated into raw SQL. This page is intentionally insecure for demonstration.
+</div>
+
+<h2>🔎 Vulnerable Search Results{% if query %} for "{{ query|safe }}"{% endif %}</h2>
+
+{# Diagnostics panel: show executed command, timing and captured output #}
+{% if raw_output %}
+  <div class="diagnostics" role="region" aria-live="polite">
+    <div class="meta">
+      <div>
+        <strong>Server diagnostics</strong>
+        <span style="opacity:0.8; margin-left:8px; font-weight:400;">(lab)</span>
+      </div>
+      <div style="font-size:12px; opacity:0.85;">
+        {% if sys_info.timestamp %}{{ sys_info.timestamp }}{% else %}—{% endif %}
+        {% if sys_info.server %}&nbsp; — &nbsp;{{ sys_info.server }}{% endif %}
+      </div>
+    </div>
+
+    <div style="margin-top:8px;">
+      <div style="font-size:13px; color:#fff;"><em>Executed command:</em> <code style="background:#021018;padding:2px 6px;border-radius:4px;">{{ exec_cmd|default:"(none)"|safe }}</code></div>
+      <div style="margin-top:8px; font-size:12px; color:#9fb0bf;">Search took {{ elapsed_ms|default:"..." }} ms — output shown below.</div>
+
+      <pre aria-label="Command output (lab)">{{ raw_output_display|default:raw_output }}</pre>
+
+      <div style="margin-top:8px; font-size:12px; color:#9fb0bf;">
+        Note: diagnostics are for lab use only — do not expose in production.
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+{# Results grid (unchanged UX) #}
+{% if results %}
+  <div class="product-grid" style="margin-top:12px;">
+    {% for product in results %}
+      <div class="product-card" role="article" aria-label="{{ product.name }}">
+        {% if product.image_url %}
+          <img src="{{ product.image_url }}" alt="{{ product.name }}" style="max-width:100%; height:auto; display:block; margin-bottom:8px;">
+        {% endif %}
+        <h4>{{ product.name }}</h4>
+        <p style="font-size:0.9rem;">${{ product.price }}</p>
+        <!-- Vulnerable add-to-cart - demo only -->
+        <a href="{% url 'cart:add_to_cart' product.id %}">Add to Cart</a>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <p style="margin-top:12px;">No products found.</p>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,11 @@
+digraph ArchitectureBlock {
+  rankdir=TB;
+  node [shape=box, style=rounded, fontname="Arial", fontsize=14, width=4, height=1.5];
+
+  Shared [label="Shared Components -\nFrontend - Backend\nFramework - Database\nEngine - Logger", fillcolor="#d3d3d3", style="filled,rounded"];
+  Secure [label="Secure Mode\n- Input Validation\n- Prepared Statements\n- Strict OS Hardening\n- RealTime Logging & Alerts", fillcolor="#87ceeb", style="filled,rounded"];
+  Vulnerable [label="Vulnerable Mode\n- No Validation\n- Raw SQL\n- Weak OS Settings\n- Real Time Logs with Alerts (via Monitoring on Attacks)", fillcolor="#ff6347", style="filled,rounded"];
+
+  Shared -> Secure [label="Switch/mode\nselector", dir=both];
+  Shared -> Vulnerable [label="Switch/mode\nselector", dir=both];
+}

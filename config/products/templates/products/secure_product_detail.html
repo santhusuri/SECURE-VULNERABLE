@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{% if mode == 'vulnerable' %}⚠ {{ product.name }} (Vulnerable){% else %}{{ product.name }}{% endif %}{% endblock %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/product_detail.css' %}">
+{% if mode == 'vulnerable' %}
+<link rel="stylesheet" href="{% static 'css/vuln_product_detail.css' %}">
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if mode == 'vulnerable' %}
+<div class="vuln-alert">
+    ⚠ VULNERABLE MODE: This product detail is fetched using <strong>raw SQL</strong>.
+    No CSRF protection is applied when adding to cart.
+</div>
+{% endif %}
+
+<h2>{{ product.name }}</h2>
+<p><strong>Price:</strong> ${{ product.price }}</p>
+<p>{% if mode == 'vulnerable' %}{{ product.description|safe }}{% else %}{{ product.description }}{% endif %}</p>
+
+{% if product.image_url %}
+  <img src="{{ product.image_url }}" alt="{{ product.name }}" style="max-width:250px;">
+{% elif product.image %}
+  <img src="{{ product.image.url }}" alt="{{ product.name }}" style="max-width:250px;">
+{% endif %}
+
+<form action="{% url 'cart:add_to_cart' product.id %}" method="post">
+    {% if mode == 'secure' %}{% csrf_token %}{% endif %}
+    <button type="submit">{% if mode == 'vulnerable' %}Add to Cart (Insecure){% else %}Add to Cart{% endif %}</button>
+</form>
+{% endblock %}

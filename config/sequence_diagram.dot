@@ -1,0 +1,33 @@
+@startuml
+skinparam sequence {
+  ArrowColor DeepSkyBlue
+  ActorBorderColor DeepSkyBlue
+  LifeLineBorderColor DeepSkyBlue
+  LifeLineBackgroundColor #E0F7FA
+  ParticipantBorderColor DeepSkyBlue
+  ParticipantBackgroundColor #E0F7FA
+  NoteBackgroundColor #FFFACD
+  NoteBorderColor #F0E68C
+}
+
+actor "Customer (Web Browser)" as User
+participant "Web Server (Frontend)" as WebServer
+participant "Application Server\n(Secure/Vulnerable)" as AppServer
+database "Database\n(Products, Orders, Users)" as Database
+participant "Real-Time Logger" as Logger
+
+User -> WebServer: HTTP Request
+WebServer -> AppServer: API Call
+AppServer -> Database: DB Queries
+Database --> AppServer: Query Results
+AppServer --> WebServer: Response
+WebServer --> User: Rendered Page
+AppServer -> Logger: Log Events
+Logger -> Logger: Store Logs
+
+alt [Secure Mode]
+  AppServer -> Logger: Send Alerts (SQLi/XSS detection)
+else [Vulnerable Mode]
+  AppServer -> Logger: Real-Time Logs with Alerts\n(via External Project Monitoring on Attacks)
+end
+@enduml

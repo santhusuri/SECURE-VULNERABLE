@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}{% if mode == 'vulnerable' %}⚠ Vulnerable Products{% else %}🛡️ Secure Products{% endif %}{% endblock %}
+{% load static %}
+{% load custom_tags %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/products.css' %}">
+<link rel="stylesheet" href="{% static 'css/alerts.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<form method="get" action="{% url 'products:product_search' %}" class="product-search-form" style="margin: 20px auto; display: flex; justify-content: center;">
+  <input type="text" name="q" placeholder="Search products..." value="{{ query|default:'' }}" aria-label="Search products" style="width: 300px; padding: 8px 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px 0 0 4px; outline: none;">
+  <button type="submit" style="padding: 8px 16px; font-size: 16px; background-color: #007bff; border: 1px solid #007bff; color: white; border-radius: 0 4px 4px 0; cursor: pointer; transition: background-color 0.3s ease;">Search</button>
+</form>
+
+{% if mode == 'vulnerable' %}
+<!-- 🔴 Vulnerable Mode Banner (full-width above container) -->
+<div class="vulnerable-alert">
+    ⚠️ You are currently in <strong>VULNERABLE MODE</strong>.
+    Inputs are not validated and may expose security risks.
+</div>
+{% elif mode == 'secure' %}
+<!-- 🛡️ Secure Mode Banner (full-width above container) -->
+<div class="secure-alert">
+    🛡️ You are currently in <strong>SECURE MODE</strong>.
+    Inputs are validated and security measures are in place.
+</div>
+{% endif %}
+
+<h2>{% if mode == 'vulnerable' %}⚠{% else %}🛍️{% endif %} Products{% if selected_category %} in {{ selected_category.name }}{% endif %}</h2>
+
+<div class="category-sidebar">
+    <h3>Categories</h3>
+    <ul>
+        {% for category in categories %}
+            <li>
+                <a href="{% url 'products:product_list_by_category' category.slug %}">
+                    {{ category.name }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<div class="product-grid">
+    {% for product in results %}
+        <div class="product-card">
+            {% if product.image_url %}
+                <img src="{{ product.image_url }}" alt="{{ product.name }}">
+            {% elif product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}">
+            {% elif product.image_db %}
+                <img src="{{ product.image_db }}" alt="{{ product.name }}">
+            {% else %}
+                {% if "smartphone" in product.name|lower %}
+                    <img src="{% static 'images/smartphone.jpg' %}" alt="{{ product.name }}">
+                {% elif "laptop" in product.name|lower %}
+                    <img src="{% static 'images/laptop.jpg' %}" alt="{{ product.name }}">
+                {% elif "t-shirt" in product.name|lower or "shirt" in product.name|lower %}
+                    <img src="{% static 'images/tshirt.jpg' %}" alt="{{ product.name }}">
+                {% elif "jeans" in product.name|lower %}
+                    <img src="{% static 'images/jeans.jpg' %}" alt="{{ product.name }}">
+                {% elif "python" in product.name|lower %}
+                    <img src="{% static 'images/python-programming.jpg' %}" alt="{{ product.name }}">
+                {% elif "django" in product.name|lower %}
+                    <img src="{% static 'images/django-web.jpg' %}" alt="{{ product.name }}">
+                {% else %}
+                    <img src="{% static 'images/dummy-product.jpg' %}" alt="{{ product.name }}">
+                {% endif %}
+            {% endif %}
+            <h4>{{ product.name|default:"Unnamed" }}</h4>
+            <p>${{ product.price }}</p>
+
+            {# Removed reviews content in secure mode as per request #}
+
+            {% if product.slug %}
+                <a href="{% url 'products:product_detail' product.slug %}">View</a>
+            {% elif product.id %}
+                <a href="{% url 'products:product_detail' product.id %}">View</a>
+            {% endif %}
+        </div>
+    {% empty %}
+        <p>No products found.</p>
+    {% endfor %}
+</div>
+
+{# ---------------- DIAGNOSTICS ---------------- #}
+{% if raw_output %}
+  <div class="diagnostics">
+    <h4>💻 SQL Output</h4>
+    <pre>{{ raw_output }}</pre>
+  </div>
+{% endif %}
+
+{% endblock %}

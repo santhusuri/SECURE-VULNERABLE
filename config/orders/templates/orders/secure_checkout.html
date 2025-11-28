@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Secure Checkout{% endblock %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/checkout.css' %}">
+<link rel="stylesheet" href="{% static 'css/alerts.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include "includes/mode_banner.html" %}
+
+<div class="checkout-wrapper">
+  <h2>🛒 Secure Checkout</h2>
+  <p>Your payment will be processed via <strong>Stripe</strong> with full validation.</p>
+
+  <!-- Checkout Table -->
+  <table class="checkout-table">
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>Qty</th>
+        <th>Price</th>
+        <th>Subtotal</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for id, item in cart.items %}
+      <tr>
+        <td>{{ item.name }}</td>
+        <td>{{ item.qty }}</td>
+        <td>${{ item.price }}</td>
+        <td>${{ item.subtotal }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p><strong>Total:</strong> ${{ total }}</p>
+
+  <!-- Stripe Payment Form -->
+  <form id="payment-form">
+    <div id="card-element"><!-- Stripe.js injects the Card Element --></div>
+    <button id="submit" class="btn-checkout">Pay Securely</button>
+  </form>
+</div>
+
+<!-- Stripe JS -->
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  const STRIPE_PUBLIC_KEY = "{{ STRIPE_PUBLIC_KEY }}";
+  const CLIENT_SECRET = "{{ client_secret }}";
+  const CREATE_ORDER_URL = "{% url 'orders:create_order' %}";
+  const CSRF_TOKEN = "{{ csrf_token }}";
+  const ORDER_SUCCESS_URL = "{% url 'orders:order_success' 'PLACEHOLDER' %}";
+</script>
+<script src="{% static 'js/checkout.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Performance Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Performance Dashboard: Secure vs Vulnerable Mode</h1>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card p-3">
+                <h5>Total Logs</h5>
+                <p><strong>Secure Mode:</strong> {{ secure_count }}</p>
+                <p><strong>Vulnerable Mode:</strong> {{ vuln_count }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4 justify-content-center">
+        <div class="col-md-10 text-center">
+            <img src="data:image/png;base64,{{ graph }}" alt="Performance Graphs" class="img-fluid border rounded shadow-sm">
+        </div>
+    </div>
+
+    <h2>Attack-Specific Performance</h2>
+    <div class="row">
+        {% for attack, data in attack_data.items %}
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{{ data.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Execution Time:</strong></p>
+                    <ul>
+                        <li>Secure: {{ data.secure_time|floatformat:4 }} s</li>
+                        <li>Vulnerable: {{ data.vuln_time|floatformat:4 }} s</li>
+                    </ul>
+                    <p><strong>RAM Usage:</strong></p>
+                    <ul>
+                        <li>Secure: {{ data.secure_ram|floatformat:2 }} MB</li>
+                        <li>Vulnerable: {{ data.vuln_ram|floatformat:2 }} MB</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Vulnerable Checkout{% endblock %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/vuln_checkout.css' %}">
+<link rel="stylesheet" href="{% static 'css/alerts.css' %}">
+{% endblock %}
+
+{% block content %}
+{% include "includes/mode_banner.html" %}
+
+<div class="checkout-wrapper">
+  <h2>⚠ Vulnerable Checkout</h2>
+  <p>This mode allows you to enter any amount without verification.</p>
+
+  <!-- Checkout Table -->
+  <table class="checkout-table">
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>Qty</th>
+        <th>Price</th>
+        <th>Subtotal</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for id, item in cart.items %}
+      <tr>
+        <td>{{ item.name }}</td>
+        <td>{{ item.qty }}</td>
+        <td>${{ item.price }}</td>
+        <td>${{ item.subtotal }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p><strong>Calculated Total:</strong> ${{ total }}</p>
+
+  <!-- Vulnerable Payment Form -->
+  <form method="post">
+    {% csrf_token %}
+    <label for="amount">Enter Amount to Pay:</label>
+    <input type="number" id="amount" name="amount" step="0.01" value="{{ total }}" required>
+    <button type="submit" class="btn-vuln-checkout">Pay Any Amount</button>
+  </form>
+</div>
+{% endblock %}

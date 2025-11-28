@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Vulnerable Product Detail{% endblock %}
+{% load static %}
+{% load custom_tags %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/vuln_product_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="product-detail-container vuln-mode">
+    <h2>{{ product.name|default:"Unnamed" }}</h2>
+
+    <div class="product-image">
+        {% if product.image_url %}
+            <img src="{{ product.image_url }}" alt="{{ product.name }}">
+        {% elif product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+        {% elif product.image_db %}
+            <img src="{{ product.image_db }}" alt="{{ product.name }}">
+        {% else %}
+            <img src="{% static 'images/dummy-product.jpg' %}" alt="{{ product.name }}">
+        {% endif %}
+    </div>
+
+    <div class="product-info">
+        <p>Price: ${{ product.price }}</p>
+        <p>Description: {{ product.description|default:"No description available." }}</p>
+    </div>
+
+    <form action="{% url 'cart:add_to_cart' product.id %}" method="post">
+        {% csrf_token %}
+        <button type="submit">Add to Cart (Insecure)</button>
+    </form>
+
+    <div class="product-reviews">
+        <h3>Reviews:</h3>
+        {% if reviews %}
+            <ul>
+                {% for review in reviews %}
+                    <li>
+                        <strong>{{ review.user.username }}</strong>:
+                        <em>{{ review.comment }}</em>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No reviews yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

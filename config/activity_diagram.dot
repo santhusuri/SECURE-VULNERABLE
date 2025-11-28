@@ -1,0 +1,23 @@
+digraph ActivityDiagram {
+  rankdir=TB;
+
+  Start [shape=circle, label="Start"];
+  AddToCart [shape=box, label="Add products to cart"];
+  ViewCart [shape=box, label="View shopping cart"];
+  Checkout [shape=diamond, label="Choose checkout mode"];
+  SecurePay [shape=box, label="Process payment via Stripe"];
+  VulnPay [shape=box, label="Enter custom payment amount"];
+  CreateOrder [shape=box, label="Create order and shipment"];
+  Success [shape=box, label="Display order success"];
+  End [shape=doublecircle, label="End"];
+
+  Start -> AddToCart;
+  AddToCart -> ViewCart;
+  ViewCart -> Checkout;
+  Checkout -> SecurePay [label="Secure mode"];
+  Checkout -> VulnPay [label="Vulnerable mode"];
+  SecurePay -> CreateOrder;
+  VulnPay -> CreateOrder;
+  CreateOrder -> Success;
+  Success -> End;
+}

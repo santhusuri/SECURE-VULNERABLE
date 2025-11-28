@@ -1,0 +1,95 @@
+/* ===== Global Styles ===== */
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f7f9fb;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== Order Success Container ===== */
+.order-success {
+  text-align: center;
+  margin: 3rem auto;
+  padding: 2.5rem;
+  max-width: 650px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== Heading ===== */
+.order-success h2 {
+  color: #2e7d32; /* green for success */
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.order-success p {
+  font-size: 1.05rem;
+  margin: 0.5rem 0;
+}
+
+/* ===== Mode Badges ===== */
+.mode-badge {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  margin-top: 1.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.mode-secure {
+  background: #e6f9e6;
+  color: #2e7d32;
+  border: 1px solid #2e7d32;
+}
+
+.mode-vulnerable {
+  background: #ffe6e6;
+  color: #b22222;
+  border: 1px solid #b22222;
+}
+
+/* ===== Buttons ===== */
+.btn-checkout,
+.btn-continue {
+  display: inline-block;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Primary Button - Download Invoice */
+.btn-checkout {
+  background: linear-gradient(90deg, #3182ce, #1976d2);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(50, 115, 220, 0.25);
+}
+
+.btn-checkout:hover {
+  background: linear-gradient(90deg, #1565c0, #0d47a1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(50, 115, 220, 0.3);
+}
+
+/* Secondary Button - Continue Shopping */
+.btn-continue {
+  margin-top: 12px;
+  background: #f1f5f9;
+  color: #333;
+  border: 1px solid #cbd5e0;
+}
+
+.btn-continue:hover {
+  background: #e2e8f0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}

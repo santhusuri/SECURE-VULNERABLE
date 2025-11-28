@@ -1,0 +1,28 @@
+digraph DFD_Style {
+  rankdir=LR;
+  node [shape=box, style=rounded, fontname="Arial", fontsize=14, fixedsize=true, width=2.5, height=1.2];
+  edge [fontname="Arial", fontsize=12];
+
+  User [label="User", shape=rect, style="rounded,filled", fillcolor="#f0f0f0"];
+  Admin [label="Admin", shape=rect, style="rounded,filled", fillcolor="#f0f0f0"];
+
+  UserAuth [label="User Authentication"];
+  ViewProducts [label="View Products"];
+  ManageCartCheckout [label="Manage Cart\nCheckout"];
+  AdminManagement [label="Admin Management"];
+
+  UserDB [label="User Database", shape=cylinder, width=1.5, height=1];
+  ProductDB [label="Product Database", shape=cylinder, width=1.5, height=1];
+  OrderDB [label="Order Database", shape=cylinder, width=1.5, height=1];
+  CartDB [label="Cart Database", shape=cylinder, width=1.5, height=1];
+
+  User -> UserAuth;
+  UserAuth -> UserDB;
+  UserAuth -> ViewProducts;
+  ViewProducts -> ProductDB;
+  ViewProducts -> ManageCartCheckout;
+  ManageCartCheckout -> OrderDB;
+  ManageCartCheckout -> AdminManagement;
+  Admin -> AdminManagement;
+  AdminManagement -> CartDB;
+}

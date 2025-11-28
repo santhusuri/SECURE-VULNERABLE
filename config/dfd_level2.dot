@@ -1,0 +1,18 @@
+digraph DFD_Level2 {
+  rankdir=LR;
+  node [shape=box];
+
+  User [label="User"];
+  SecureProcess [label="Secure Processing"];
+  VulnerableProcess [label="Vulnerable Processing"];
+
+  P8 [shape=circle, label="P8: Input Validation"];
+
+  DS3 [shape=cylinder, label="DS3: Order DB"];
+
+  User -> P8 [label="raw input data"];
+  P8 -> SecureProcess [label="sanitized data\n(validates & sanitizes)"];
+  P8 -> VulnerableProcess [label="raw data\n(bypasses checks)"];
+  SecureProcess -> DS3 [label="secure order data"];
+  VulnerableProcess -> DS3 [label="potentially unsafe order data"];
+}

@@ -1,0 +1,10 @@
+.vulnerable-alert {
+    background-color: #ffe5e5;
+    color: #b22222;
+    padding: 0.9rem;
+    border: 1px solid #b22222;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-weight: bold;
+}

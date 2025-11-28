@@ -1,0 +1,35 @@
+digraph UseCaseDiagram {
+  rankdir=LR;
+  node [shape=ellipse, style=filled, fillcolor=lightblue];
+
+  // Actors
+  Customer [shape=rectangle, fillcolor=lightgreen];
+
+  // Use Cases
+  Register [label="Register Account"];
+  Login [label="Login"];
+  ViewProducts [label="View Product Catalog"];
+  AddToCart [label="Add Product to Cart"];
+  ViewCart [label="View Shopping Cart"];
+  SecureCheckout [label="Secure Checkout\n(Stripe Payment)"];
+  VulnerableCheckout [label="Vulnerable Checkout\n(User Input Amount)"];
+  ViewOrders [label="View My Orders"];
+  DownloadInvoice [label="Download Invoice"];
+  Logout [label="Logout"];
+
+  // Relationships
+  Customer -> Register;
+  Customer -> Login;
+  Customer -> ViewProducts;
+  Customer -> AddToCart;
+  Customer -> ViewCart;
+  Customer -> SecureCheckout;
+  Customer -> VulnerableCheckout;
+  Customer -> ViewOrders;
+  Customer -> DownloadInvoice;
+  Customer -> Logout;
+
+  // Extend relationships
+  SecureCheckout -> ViewOrders [style=dashed, label="extends"];
+  VulnerableCheckout -> ViewOrders [style=dashed, label="extends"];
+}

@@ -359,3 +359,19 @@
 2025-11-28 03:24:19 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/toggle_mode/: {}
 2025-11-28 03:30:45 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/toggle_mode/: {}
 2025-11-28 03:33:45 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/toggle_mode/: {}
+2025-11-28 16:23:27 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/toggle_mode/: {}
+2025-11-28 16:23:45 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /cart/add/34/: {'csrfmiddlewaretoken': '*****'}
+2025-11-28 16:23:51 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /orders/: {'csrfmiddlewaretoken': '*****', 'amount': '699.99'}
+2025-11-28 16:23:57 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/toggle_mode/: {}
+2025-11-28 16:24:10 | User: 127.0.0.1 | [SECURE MODE] POST to /cart/add/28/: {'csrfmiddlewaretoken': '*****'}
+2025-11-28 16:24:42 | User: 127.0.0.1 | [SECURE MODE] POST to /cart/add/29/: {'csrfmiddlewaretoken': '*****'}
+2025-11-28 16:24:48 | User: 127.0.0.1 | [SECURE MODE] POST to /cart/update-quantity/29/: {'csrfmiddlewaretoken': '*****', 'qty': '1', 'action': 'increase'}
+2025-11-28 16:24:49 | User: 127.0.0.1 | [SECURE MODE] POST to /cart/update-quantity/29/: {'csrfmiddlewaretoken': '*****', 'qty': '1', 'action': 'increase'}
+2025-11-28 16:24:50 | User: 127.0.0.1 | [SECURE MODE] POST to /cart/update-quantity/29/: {'csrfmiddlewaretoken': '*****', 'qty': '1', 'action': 'increase'}
+2025-11-28 16:24:51 | User: 127.0.0.1 | [SECURE MODE] POST to /cart/update-quantity/29/: {'csrfmiddlewaretoken': '*****', 'qty': '1', 'action': 'increase'}
+2025-11-28 16:24:51 | User: 127.0.0.1 | [SECURE MODE] POST to /cart/update-quantity/29/: {'csrfmiddlewaretoken': '*****', 'qty': '1', 'action': 'increase'}
+2025-11-28 16:24:51 | User: 127.0.0.1 | [SECURE MODE] POST to /cart/update-quantity/29/: {'csrfmiddlewaretoken': '*****', 'qty': '1', 'action': 'increase'}
+2025-11-28 16:24:51 | User: 127.0.0.1 | [SECURE MODE] POST to /cart/update-quantity/29/: {'csrfmiddlewaretoken': '*****', 'qty': '1', 'action': 'increase'}
+2025-11-28 16:24:52 | User: 127.0.0.1 | [SECURE MODE] POST to /cart/update-quantity/29/: {'csrfmiddlewaretoken': '*****', 'qty': '1', 'action': 'increase'}
+2025-11-28 16:24:52 | User: 127.0.0.1 | [SECURE MODE] POST to /cart/update-quantity/29/: {'csrfmiddlewaretoken': '*****', 'qty': '1', 'action': 'increase'}
+2025-11-28 16:24:52 | User: 127.0.0.1 | [SECURE MODE] POST to /cart/update-quantity/29/: {'csrfmiddlewaretoken': '*****', 'qty': '1', 'action': 'increase'}
