@@ -39,16 +39,41 @@
   const card = elements.create("card");
   card.mount("#card-element");
 
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+
   const form = document.getElementById("payment-form");
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
+
     const { paymentIntent, error } = await stripe.confirmCardPayment("{{ client_secret }}", {
       payment_method: { card: card }
     });
+
     if (error) {
       alert(error.message);
     } else {
-      window.location.href = "{% url 'orders:order_success' 0 %}".replace("0", paymentIntent.id);
+      // Call secure create_order to create DB order and get numeric order_id
+      fetch("{% url 'orders:create_order' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: JSON.stringify({ payment_intent_id: paymentIntent.id }),
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.order_id) {
+          // Redirect using integer order_id → matches success/<int:order_id>/
+          window.location.href = "{% url 'orders:order_success' 0 %}".replace("0", data.order_id);
+        } else {
+          alert("Order creation failed: " + (data.error || "Unknown error"));
+        }
+      });
     }
   });
 </script>

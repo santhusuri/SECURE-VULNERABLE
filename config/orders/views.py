@@ -130,9 +130,13 @@ def stripe_webhook(request):
 # -----------------------
 # Order Success
 # -----------------------
+from django.shortcuts import get_object_or_404, render
+
 def order_success(request, order_id):
-    order = Order.objects.get(id=order_id)
-    return render(request, "orders/order_success.html", {"order": order})
+    order = get_object_or_404(Order, id=order_id)
+    return render(request, "orders/order_success.html", {
+        "order": order,
+    })
 
 
 # -----------------------

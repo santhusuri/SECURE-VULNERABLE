@@ -519,3 +519,9 @@
 2025-11-28 19:16:02 | User: system | [LOCAL] session_hijacking detected in secure mode: POST to /accounts/profile/: {'username': 'PHPSESSID=12345', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
 2025-11-28 19:16:03 | User: 127.0.0.1 | [SECURE MODE] POST to /orders/: {'username': 'csrfmiddlewaretoken=fake_token', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
 2025-11-28 19:16:03 | User: system | [LOCAL] csrf_bypass detected in secure mode: POST to /orders/: {'username': 'csrfmiddlewaretoken=fake_token', 'password': '*****', 'csrfmiddlewaretoken': '*****'}
+2025-11-28 19:18:24 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/toggle_mode/: {}
+2025-11-28 19:26:42 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/login/: {'csrfmiddlewaretoken': '*****', 'username': 'sample', 'password': '*****'}
+2025-11-28 19:31:58 | User: 127.0.0.1 | [SECURE MODE] POST to /orders/create_order/: {}
+2025-11-28 19:32:46 | User: 127.0.0.1 | [SECURE MODE] POST to /accounts/toggle_mode/: {}
+2025-11-28 19:32:55 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /accounts/login/: {'csrfmiddlewaretoken': '*****', 'username': 'example', 'password': '*****'}
+2025-11-28 19:33:04 | User: 127.0.0.1 | [VULNERABLE MODE] POST to /orders/: {'csrfmiddlewaretoken': '*****', 'amount': '699.99'}
