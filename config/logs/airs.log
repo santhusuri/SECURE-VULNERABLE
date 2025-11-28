@@ -16,3 +16,6 @@
 2025-11-28 03:12:57 | Alert ID: 9299 | Type: sql_injection
 2025-11-28 03:17:51 | Alert ID: 1363 | Type: xss
 2025-11-28 03:18:05 | Alert ID: 4809 | Type: sql_injection
+2025-11-28 18:31:07 | Alert ID: 3090 | Type: xss
+2025-11-28 18:31:35 | Alert ID: 2517 | Type: xss
+2025-11-28 18:33:38 | Alert ID: 7711 | Type: xss

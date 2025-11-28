@@ -1,47 +1,92 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}
-  Products{% if mode == "vuln" %} (Vulnerable){% endif %}
-{% endblock %}
+{% block title %}Products{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/product_list.css' %}">
 <style>
-.vuln-alert {
-    background: #ffe5e5;
-    border: 2px solid #cc0000;
-    color: #cc0000;
-    padding: 10px;
-    border-radius: 5px;
-    margin-bottom: 1.5rem;
-    font-weight: bold;
-}
-.product-grid {
+.page-wrapper {
     display: flex;
-    gap: 1rem;
+    gap: 2rem;
 }
-.product-column {
-    flex: 1;
+.sidebar {
+    width: 220px;
+    padding: 1.5rem 1rem;
+    background: #f7f9fc;
+    border-radius: 12px;
 }
-.product-card {
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 0.75rem;
+.sidebar-title {
+    font-weight: 700;
+    font-size: 1.1rem;
     margin-bottom: 1rem;
+}
+.category-link {
+    display: block;
+    padding: 0.35rem 0;
+    color: #0d6efd;
+    text-decoration: none;
+}
+.category-link:hover {
+    text-decoration: underline;
+}
+
+.products-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 1.5rem;
+}
+
+.product-card {
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    padding: 1rem 1rem 1.25rem;
     text-align: center;
 }
-.product-card img {
-    max-width: 140px;
-    max-height: 140px;
+.product-image-wrapper {
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+}
+.product-image-wrapper img {
+    max-width: 100%;
+    max-height: 100%;
     object-fit: contain;
-    margin-bottom: 0.5rem;
 }
-.category-list {
+.product-name {
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+}
+.product-price {
+    color: #0d6efd;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+.btn-add {
+    display: inline-block;
+    background: #0d6efd;
+    color: #fff;
+    padding: 0.5rem 1.3rem;
+    border-radius: 6px;
+    font-weight: 600;
+    text-decoration: none;
+}
+.btn-add:hover {
+    background: #0b5ed7;
+}
+.mode-banner {
     margin-bottom: 1rem;
+    padding: 0.6rem 0.9rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
 }
-.category-list a {
-    display: block;
+.mode-banner.vuln {
+    background: #ffe5e5;
+    color: #a30000;
+    border: 1px solid #ffb3b3;
 }
 </style>
 {% endblock %}
@@ -49,46 +94,51 @@
 {% block content %}
 
 {% if mode == "vuln" %}
-  <div class="vuln-alert">
-      ⚠ VULNERABLE MODE: Products are loaded using <strong>raw SQL</strong>. Input is not validated and may expose security risks.
-  </div>
+<div class="mode-banner vuln">
+    ⚠ You are running in <strong>VULNERABLE MODE</strong>. Inputs are not validated and may expose security risks.
+</div>
 {% endif %}
 
-<div class="product-grid">
-    <div class="product-column">
-        <h4>Categories</h4>
-        <div class="category-list">
-            {% for cat in categories %}
-                <a href="{% url 'products:product_list_by_category' cat.slug %}">
-                    {{ cat.name }}
-                </a>
-            {% empty %}
-                <p>No categories available.</p>
-            {% endfor %}
-        </div>
-    </div>
+<div class="page-wrapper">
 
-    <div class="product-column">
+    <!-- Categories sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-title">Categories</div>
+        {% for cat in categories %}
+            <a class="category-link"
+               href="{% url 'products:product_list_by_category' cat.slug %}">
+                {{ cat.name }}
+            </a>
+        {% empty %}
+            <p>No categories available.</p>
+        {% endfor %}
+    </aside>
+
+    <!-- Products grid -->
+    <section class="products-grid">
         {% for p in results %}
             <div class="product-card">
-                {# image_url for vuln dicts, image for secure queryset #}
-                {% if p.image_url %}
-                    <img src="{{ p.image_url }}" alt="{{ p.name }}">
-                {% elif p.image %}
-                    <img src="{{ p.image.url }}" alt="{{ p.name }}">
-                {% endif %}
+                <div class="product-image-wrapper">
+                    {% if p.image_url %}
+                        <img src="{{ p.image_url }}" alt="{{ p.name }}">
+                    {% elif p.image %}
+                        <img src="{{ p.image.url }}" alt="{{ p.name }}">
+                    {% endif %}
+                </div>
 
-                <h5>{{ p.name }}</h5>
-                <p>${{ p.price }}</p>
+                <div class="product-name">{{ p.name }}</div>
+                <div class="product-price">${{ p.price }}</div>
 
-                {# Use slug exactly as stored in DB (# secure: smartphone, vuln: smartphone-vuln) #}
-                <a href="{% url 'products:product_detail' p.slug %}">View</a>
-
+                <a class="btn-add"
+                   href="{% url 'cart:add_to_cart' p.id %}">
+                    Add to Cart
+                </a>
             </div>
         {% empty %}
             <p>No products found.</p>
         {% endfor %}
-    </div>
+    </section>
+
 </div>
 
 {% endblock %}
